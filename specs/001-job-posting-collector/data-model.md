@@ -1,0 +1,380 @@
+# Data Model: Job Posting Collector
+
+**Feature**: 001-job-posting-collector  
+**Created**: 2025-11-05  
+**Phase**: 1 - Design & Contracts
+
+## Entity Definitions
+
+### 1. Job Posting (Extension-side DTO)
+
+**Description**: Data transfer object representing scraped job posting data from LinkedIn, transmitted from Chrome Extension to Flask backend.
+
+**Fields**:
+
+| Field | Type | Required | Validation | Description |
+|-------|------|----------|------------|-------------|
+| `position` | string | Yes | 1-500 chars, non-empty | Job title/position name extracted from LinkedIn page |
+| `company` | string | Yes | 1-200 chars, non-empty | Company/employer name extracted from LinkedIn page |
+| `posting_url` | string | Yes | Valid URL, LinkedIn domain | Full URL of the LinkedIn job posting page |
+| `origin` | string | Yes | Enum: "LinkedIn" | Source platform, always "LinkedIn" for this feature |
+| `match` | string | No | Enum: "low", "medium", "high" | User's assessment of job fit |
+| `work_arrangement` | string | No | Enum: "remote", "hybrid", "on-site" | Work location arrangement |
+| `demand` | string | No | Enum: "0-50", "51-200", "201-500", "500+" | Company size/demand level |
+| `budget` | number | No | Positive number | Salary budget/expectation |
+| `job_description` | string | No | Max 50000 chars | Full job description text |
+| `city` | string | No | Max 200 chars | City extracted from location information |
+| `country` | string | No | Max 200 chars | Country extracted from location information |
+
+**Example**:
+```json
+{
+  "position": "Senior Software Engineer",
+  "company": "Acme Corporation",
+  "posting_url": "https://www.linkedin.com/jobs/view/1234567890",
+  "origin": "LinkedIn",
+  "match": "high",
+  "work_arrangement": "remote",
+  "demand": "201-500",
+  "budget": 150000,
+  "job_description": "We are looking for a Senior Software Engineer...",
+  "city": "San Francisco",
+  "country": "United States"
+}
+```
+
+**Validation Rules**:
+- `position`: Must not be empty or whitespace-only after trimming
+- `company`: Must not be empty or whitespace-only after trimming
+- `posting_url`: Must match pattern `https://www.linkedin.com/jobs/view/*` or `https://www.linkedin.com/jobs/collections/*`
+- `origin`: Must equal "LinkedIn" (case-sensitive)
+- `match`: If provided, must be one of: "low", "medium", "high"
+- `work_arrangement`: If provided, must be one of: "remote", "hybrid", "on-site"
+- `demand`: If provided, must be one of: "0-50", "51-200", "201-500", "500+"
+- `budget`: If provided, must be a positive number
+- `job_description`: If provided, max length 50000 characters
+- `city`: If provided, max length 200 characters, non-empty after trimming
+- `country`: If provided, max length 200 characters, non-empty after trimming
+
+**State Transitions**: None (stateless DTO)
+
+---
+
+### 2. Notion Job Application Entry
+
+**Description**: Persistent record in the Notion "Job Applications" database representing a saved job opportunity.
+
+**Notion Database Properties** (as defined in user requirements):
+
+| Property Name | Notion Type | Sent in Request | Notes |
+|---------------|-------------|-----------------|-------|
+| `Position` | Title | ✅ Yes (required) | Job title (Notion page title) |
+| `Company` | Rich Text | ✅ Yes (required) | Company name |
+| `Posting URL` | URL | ✅ Yes (required) | Link to original LinkedIn posting |
+| `Origin` | Select | ✅ Yes (required) | Always "LinkedIn" for this feature |
+| `Match` | Select | ✅ Yes (optional) | User assessment: low, medium, high |
+| `Work Arrangement` | Select | ✅ Yes (optional) | remote, hybrid, on-site |
+| `Demand` | Select | ✅ Yes (optional) | Company size: 0-50, 51-200, 201-500, 500+ |
+| `Budget` | Number | ✅ Yes (optional) | Salary budget |
+| `Job Description` | Rich Text | ✅ Yes (optional) | Full job description text |
+| `City` | Rich Text | ✅ Yes (optional) | City from location information |
+| `Country` | Rich Text | ✅ Yes (optional) | Country from location information |
+| `Level` | Select | ❌ No | Filled by Notion AI Autofill |
+| `Recruiter` | Rich Text | ❌ No | Filled by Notion AI Autofill |
+| `Talent Acquisition` | Rich Text | ❌ No | Filled by Notion AI Autofill |
+| `Hiring Manager` | Rich Text | ❌ No | Filled by Notion AI Autofill |
+
+**Note**: Properties marked "Filled by Notion AI Autofill" are not sent in the request and will be populated automatically by Notion's AI features based on the provided data.
+
+**Notion API Payload Structure** (for `notion.pages.create`):
+
+```python
+{
+    "parent": {
+        "database_id": NOTION_DATABASE_ID  # From environment variable
+    },
+    "properties": {
+        "Position": {
+            "title": [
+                {
+                    "text": {
+                        "content": job_posting.position
+                    }
+                }
+            ]
+        },
+        "Company": {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": job_posting.company
+                    }
+                }
+            ]
+        },
+        "Posting URL": {
+            "url": job_posting.posting_url
+        },
+        "Origin": {
+            "select": {
+                "name": "LinkedIn"
+            }
+        },
+        # Optional fields (only include if provided in request)
+        "Match": {
+            "select": {
+                "name": job_posting.match  # "low", "medium", or "high"
+            }
+        } if job_posting.match else None,
+        "Work Arrangement": {
+            "select": {
+                "name": job_posting.work_arrangement  # "remote", "hybrid", "on-site"
+            }
+        } if job_posting.work_arrangement else None,
+        "Demand": {
+            "select": {
+                "name": job_posting.demand  # "0-50", "51-200", "201-500", "500+"
+            }
+        } if job_posting.demand else None,
+        "Budget": {
+            "number": job_posting.budget
+        } if job_posting.budget else None,
+        "Job Description": {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": job_posting.job_description
+                    }
+                }
+            ]
+        } if job_posting.job_description else None,
+        "City": {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": job_posting.city
+                    }
+                }
+            ]
+        } if job_posting.city else None,
+        "Country": {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": job_posting.country
+                    }
+                }
+            ]
+        } if job_posting.country else None
+    }
+}
+```
+
+**Note**: Optional fields are conditionally included only if provided in the request. None values should be filtered out before sending to Notion API.
+
+**Validation Rules**:
+- Database must exist and be accessible with provided API key
+- Required properties must exist in database schema:
+  - `Position` (type: title)
+  - `Company` (type: rich_text)
+  - `Posting URL` (type: url)
+  - `Origin` (type: select)
+- Optional properties (if provided in request):
+  - `Match` (type: select) - must have options: low, medium, high
+  - `Work Arrangement` (type: select) - must have options: remote, hybrid, on-site
+  - `Demand` (type: select) - must have options: 0-50, 51-200, 201-500, 500+
+  - `Budget` (type: number)
+  - `Job Description` (type: rich_text)
+  - `City` (type: rich_text)
+  - `Country` (type: rich_text)
+- Origin select option "LinkedIn" must exist in database
+- AI Autofill properties (Level, Recruiter, Talent Acquisition, Hiring Manager) should exist but are not validated or populated by the application
+
+**Constraints**:
+- Duplicate Prevention: Query existing pages by `Posting URL` before creation
+- If URL already exists, return error to user (prevent duplicate entries)
+
+**Relationships**: None (flat structure, no references to other Notion databases in MVP)
+
+---
+
+## Data Flow Diagram
+
+```
+┌─────────────────────┐
+│  LinkedIn Job Page  │
+│                     │
+│  DOM Elements:      │
+│  - h1.job-title     │
+│  - a.company-link   │
+│  - window.location  │
+└──────────┬──────────┘
+           │
+           │ Scrape via content_script.js
+           ▼
+┌─────────────────────┐
+│  Job Posting DTO    │
+│  (JavaScript Obj)   │
+│                     │
+│  {                  │
+│    position,        │
+│    company,         │
+│    posting_url,     │
+│    origin           │
+│  }                  │
+└──────────┬──────────┘
+           │
+           │ POST /api/job-postings
+           ▼
+┌─────────────────────┐
+│  Flask Validator    │
+│  (validators.py)    │
+│                     │
+│  - Check required   │
+│  - Validate types   │
+│  - Sanitize input   │
+└──────────┬──────────┘
+           │
+           │ If valid
+           ▼
+┌─────────────────────┐
+│  Notion Service     │
+│  (notion_service.py)│
+│                     │
+│  1. Check duplicate │
+│  2. Build payload   │
+│  3. Create page     │
+└──────────┬──────────┘
+           │
+           │ notion.pages.create()
+           ▼
+┌─────────────────────┐
+│  Notion Database    │
+│  "Job Applications" │
+│                     │
+│  New Page:          │
+│  - Position (Title) │
+│  - Company          │
+│  - Posting URL      │
+│  - Origin           │
+└─────────────────────┘
+```
+
+---
+
+## Field Mapping Reference
+
+**LinkedIn DOM → Job Posting DTO → Notion Properties**
+
+| LinkedIn Element | DTO Field | Notion Property | Notion Type | Required |
+|------------------|-----------|-----------------|-------------|----------|
+| `h1.top-card-layout__title` | `position` | `Position` | Title | Yes |
+| `a.topcard__org-name-link` | `company` | `Company` | Rich Text | Yes |
+| `window.location.href` | `posting_url` | `Posting URL` | URL | Yes |
+| N/A (constant) | `origin` | `Origin` | Select | Yes |
+| LinkedIn AI match indicator | `match` | `Match` | Select | No (extracted) |
+| Job details section | `work_arrangement` | `Work Arrangement` | Select | No (extracted) |
+| Number of applicants | `demand` | `Demand` | Select | No (extracted) |
+| Salary information | `budget` | `Budget` | Number | No (extracted) |
+| Job details section | `job_description` | `Job Description` | Rich Text | No (extracted) |
+| Location information | `city` | `City` | Rich Text | No (extracted) |
+| Location information | `country` | `Country` | Rich Text | No (extracted) |
+| N/A | - | `Level` | Select | No (AI Autofill) |
+| N/A | - | `Recruiter` | Rich Text | No (AI Autofill) |
+| N/A | - | `Talent Acquisition` | Rich Text | No (AI Autofill) |
+| N/A | - | `Hiring Manager` | Rich Text | No (AI Autofill) |
+
+---
+
+## Error Scenarios & Handling
+
+### Scraping Errors
+
+| Error | Cause | Handling |
+|-------|-------|----------|
+| Position not found | LinkedIn DOM changed | Return null for position, allow user to manually enter in Notion |
+| Company not found | LinkedIn DOM changed | Return null for company, allow user to manually enter in Notion |
+| Invalid URL | Not on LinkedIn job page | Show error in extension popup, disable save button |
+
+### Validation Errors
+
+| Error | Cause | HTTP Status | Response |
+|-------|-------|-------------|----------|
+| Missing position | Required field empty | 400 Bad Request | `{"error": "Position is required"}` |
+| Missing company | Required field empty | 400 Bad Request | `{"error": "Company is required"}` |
+| Invalid URL | Not a LinkedIn URL | 400 Bad Request | `{"error": "Invalid LinkedIn URL"}` |
+| Missing origin | Field not provided | 400 Bad Request | `{"error": "Origin is required"}` |
+| Invalid match | Not in allowed values | 400 Bad Request | `{"error": "Match must be one of: low, medium, high"}` |
+| Invalid work_arrangement | Not in allowed values | 400 Bad Request | `{"error": "Work arrangement must be one of: remote, hybrid, on-site"}` |
+| Invalid demand | Not in allowed values | 400 Bad Request | `{"error": "Demand must be one of: 0-50, 51-200, 201-500, 500+"}` |
+| Invalid budget | Negative number | 400 Bad Request | `{"error": "Budget must be a positive number"}` |
+| Job description too long | Exceeds 50000 chars | 400 Bad Request | `{"error": "Job description too long"}` |
+| City too long | Exceeds 200 chars | 400 Bad Request | `{"error": "City must not exceed 200 characters"}` |
+| Country too long | Exceeds 200 chars | 400 Bad Request | `{"error": "Country must not exceed 200 characters"}` |
+
+### Notion API Errors
+
+| Error | Cause | HTTP Status | Response | Retry |
+|-------|-------|-------------|----------|-------|
+| Duplicate URL | Job already saved | 409 Conflict | `{"error": "Job already saved", "existing_page_id": "..."}` | No |
+| Invalid API key | Credential issue | 401 Unauthorized | `{"error": "Notion authentication failed"}` | No |
+| Database not found | Wrong database ID | 404 Not Found | `{"error": "Notion database not found"}` | No |
+| Rate limit | Too many requests | 429 Too Many Requests | `{"error": "Rate limited, try again in 60s"}` | Yes (exponential backoff) |
+| Network timeout | Notion API down | 504 Gateway Timeout | `{"error": "Notion API timeout"}` | Yes (3 retries) |
+
+---
+
+## Database Schema Validation
+
+On Flask application startup, the backend SHOULD validate the Notion database schema:
+
+**Validation Checks**:
+1. Database ID exists and is accessible
+2. Required properties exist:
+   - `Position` (type: title)
+   - `Company` (type: rich_text)
+   - `Posting URL` (type: url)
+   - `Origin` (type: select)
+3. Optional properties exist (if application sends them):
+   - `Match` (type: select)
+   - `Work Arrangement` (type: select)
+   - `Demand` (type: select)
+   - `Budget` (type: number)
+   - `Job Description` (type: rich_text)
+4. Origin select has "LinkedIn" option
+5. Match select has options: "low", "medium", "high"
+6. Work Arrangement select has options: "remote", "hybrid", "on-site"
+7. Demand select has options: "0-50", "51-200", "201-500", "500+"
+
+**Validation Failure Behavior**:
+- Log detailed error message
+- Return HTTP 500 on first API request
+- Provide setup instructions in error response
+
+**Implementation**: Query `notion.databases.retrieve(database_id)` and inspect `properties` object.
+
+---
+
+## Future Enhancements (Out of MVP Scope)
+
+### Enhanced Data Extraction
+- Automatically extract `Job Description` from LinkedIn page content
+- Parse and extract salary range from job posting (populate `Budget`)
+- Detect work arrangement keywords in description (populate `Work Arrangement`)
+- Auto-categorize `Demand` based on company information
+
+### User Interface Improvements
+- Allow user to set `Match` rating in extension popup before saving
+- Provide dropdown for `Work Arrangement` selection in popup
+- Add quick-select buttons for `Demand` levels
+- Enable inline editing of all fields before submission
+
+### AI Integration
+- Use LLM to suggest `Match` score based on user's profile and job description
+- Automatically categorize jobs by `Demand` using company data
+- Generate summary of key job requirements for `Job Description` field
+
+### Analytics
+- Track correlation between `Match` ratings and application outcomes
+- Identify patterns in `Work Arrangement` preferences
+- Analyze `Demand` distribution across saved jobs
