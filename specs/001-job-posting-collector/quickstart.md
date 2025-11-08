@@ -257,10 +257,18 @@ curl http://localhost:5000/health
 
 1. Click the **Job Posting Collector** extension icon in Chrome toolbar
 2. The popup should show:
-   - Detected job title
-   - Detected company name
-   - "Save Job to Notion" button enabled
-3. Click **Save Job to Notion**
+   - Auto-extracted job title (Position field)
+   - Auto-extracted company name (Company field)
+   - Auto-extracted optional fields when available:
+     - Work Arrangement (remote/hybrid/on-site)
+     - Demand (number of applicants)
+     - City and Country
+   - Form layout with grouped fields:
+     - Row 1: Match Level + Work Arrangement
+     - Row 2: Demand + Budget/Salary
+     - Row 3: City + Country
+   - Posting URL is hidden (automatically populated behind the scenes)
+3. Click **Save to Notion**
 4. Watch the status messages:
    - "Extracting job data..."
    - "Saving to Notion..."
@@ -274,6 +282,11 @@ curl http://localhost:5000/health
    - **Company**: The company name
    - **Posting URL**: Clickable link to the LinkedIn posting
    - **Origin**: "LinkedIn"
+   - **Work Arrangement**: remote/hybrid/on-site (if detected)
+   - **Demand**: Applicant count category (if available)
+   - **City**: Job location city (if detected)
+   - **Country**: Job location country (if detected)
+   - **Job Description**: Full job description text (extracted but not shown in popup)
 
 **🎉 Success!** Your Job Posting Collector is working end-to-end.
 
@@ -323,8 +336,14 @@ curl http://localhost:5000/health
 **Problem**: Job title or company not detected
 - **Solution**:
   1. LinkedIn may have changed their DOM structure
-  2. Check browser console for scraping errors
-  3. Manually edit the data in extension popup before saving (future feature)
+  2. Current selectors target:
+     - Company: `.job-details-jobs-unified-top-card__company-name a`
+     - Position: `h1.jobs-unified-top-card__job-title`
+     - Work Arrangement: `.job-details-fit-level-preferences`
+     - Demand: `.jobs-premium-applicant-insights__list-num`
+     - City: `.job-details-jobs-unified-top-card__primary-description-container .tvm__text`
+  3. Check browser console for scraping errors
+  4. Manually enter the missing data in the extension popup before saving
 
 ### Duplicate Job Errors
 
@@ -361,7 +380,16 @@ curl http://localhost:5000/health
 - [ ] Add more robust error handling and user feedback
 - [ ] Implement duplicate detection with user choice (update vs. skip)
 - [ ] Add keyboard shortcut for quick save
-- [ ] Extract additional optional fields (match level, work arrangement, etc.)
+- [ ] Add Match Level auto-detection based on job requirements
+- [ ] Add Budget/Salary extraction when available on LinkedIn
+
+### Completed Enhancements
+- [x] Extract work arrangement (remote/hybrid/on-site)
+- [x] Extract demand (number of applicants)
+- [x] Extract city and country from job location
+- [x] Compact form layout with grouped fields
+- [x] Hidden posting URL field (auto-populated)
+- [x] Full job description extraction
 
 ### Future Features (Beyond MVP)
 - [ ] Cover letter generation (requires Principle VIII compliance)

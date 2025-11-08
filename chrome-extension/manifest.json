@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Job Posting Collector",
+  "version": "1.0.0",
+  "description": "Save LinkedIn job postings to Notion with one click",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.linkedin.com/*",
+    "http://localhost:3000/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "content_scripts": []
+}

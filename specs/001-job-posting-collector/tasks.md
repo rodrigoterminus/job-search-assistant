@@ -24,12 +24,12 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create backend directory structure: backend/src/api/, backend/src/services/, backend/src/config/
-- [ ] T002 Create Chrome extension directory structure: chrome-extension/popup/, chrome-extension/content/, chrome-extension/icons/
-- [ ] T003 [P] Create backend/requirements.txt with Flask==3.0.0, notion-client==2.2.1, flask-cors==4.0.0, python-dotenv==1.0.0
-- [ ] T004 [P] Create backend/.env.example with NOTION_API_KEY, NOTION_DATABASE_ID, FLASK_ENV, FLASK_DEBUG, FLASK_PORT placeholders
-- [ ] T005 [P] Create backend/.gitignore to exclude .env, __pycache__, venv/
-- [ ] T006 [P] Add placeholder icons to chrome-extension/icons/ (icon16.png, icon48.png, icon128.png)
+- [X] T001 Create backend directory structure: backend/src/api/, backend/src/services/, backend/src/config/
+- [X] T002 Create Chrome extension directory structure: chrome-extension/popup/, chrome-extension/content/, chrome-extension/icons/
+- [X] T003 [P] Create backend/requirements.txt with Flask==3.0.0, notion-client==2.2.1, flask-cors==4.0.0, python-dotenv==1.0.0
+- [X] T004 [P] Create backend/.env.example with NOTION_API_KEY, NOTION_DATABASE_ID, FLASK_ENV, FLASK_DEBUG, FLASK_PORT placeholders
+- [X] T005 [P] Create backend/.gitignore to exclude .env, __pycache__, venv/
+- [X] T006 [P] Add placeholder icons to chrome-extension/icons/ (icon16.png, icon48.png, icon128.png)
 
 ---
 
@@ -39,13 +39,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Implement backend/src/config/settings.py with Config class loading environment variables (NOTION_API_KEY, NOTION_DATABASE_ID, FLASK_ENV, FLASK_DEBUG, FLASK_PORT, CORS_ORIGINS) and validate() method
-- [ ] T008 [P] Implement backend/src/services/notion_service.py with NotionService class __init__(api_key, database_id)
-- [ ] T009 [P] Implement backend/src/api/validators.py with validate_job_posting() function for required fields (position, company, posting_url, origin) and URL pattern validation
-- [ ] T010 Implement backend/src/app.py with create_app() factory, CORS configuration for chrome-extension://* origins, and main entry point with Config.validate()
-- [ ] T011 Implement chrome-extension/manifest.json with Manifest V3 structure, permissions (activeTab, scripting), host_permissions for LinkedIn, and action configuration
-- [ ] T012 [P] Implement chrome-extension/popup/popup.css with form styling, container layout (450px width, 500px max-height), button styles, and status message styles
-- [ ] T013 [P] Add console logging setup to backend/src/app.py using Python logging module with DEBUG level for development
+- [X] T007 Implement backend/src/config/settings.py with Config class loading environment variables (NOTION_API_KEY, NOTION_DATABASE_ID, FLASK_ENV, FLASK_DEBUG, FLASK_PORT, CORS_ORIGINS) and validate() method
+- [X] T008 [P] Implement backend/src/services/notion_service.py with NotionService class __init__(api_key, database_id)
+- [X] T009 [P] Implement backend/src/api/validators.py with validate_job_posting() function for required fields (position, company, posting_url, origin) and URL pattern validation
+- [X] T010 Implement backend/src/app.py with create_app() factory, CORS configuration for chrome-extension://* origins, and main entry point with Config.validate()
+- [X] T011 Implement chrome-extension/manifest.json with Manifest V3 structure, permissions (activeTab, scripting), host_permissions for LinkedIn, and action configuration
+- [X] T012 [P] Implement chrome-extension/popup/popup.css with form styling, container layout (450px width, 500px max-height), button styles, and status message styles
+- [X] T013 [P] Add console logging setup to backend/src/app.py using Python logging module with DEBUG level for development
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -59,15 +59,15 @@
 
 ### Implementation for User Story 1
 
-- [ ] T014 [P] [US1] Create chrome-extension/popup/popup.html with form containing 10 visible input fields (Position*, Company*, Posting URL*, Origin*, Match, Work Arrangement, Demand, Budget, City, Country) and Save button
-- [ ] T015 [P] [US1] Implement chrome-extension/content/content_script.js with scrapeLinkedInJob() function to extract position (h1.top-card-layout__title), company (a.topcard__org-name-link), posting_url (window.location.href), and job_description (.jobs-description__content with innerText)
-- [ ] T016 [US1] Implement chrome-extension/popup/popup.js with initialization: check if current tab is LinkedIn job page using isLinkedInJobPage(), execute content_script.js via chrome.scripting.executeScript(), receive scraped data
-- [ ] T017 [US1] Implement prefillForm() function in chrome-extension/popup/popup.js to populate form fields from scraped data and store extractedJobDescription variable
-- [ ] T018 [US1] Implement getFormData() function in chrome-extension/popup/popup.js to collect form values (trim strings, parse budget as number, include job_description from extractedJobDescription variable)
-- [ ] T019 [US1] Add validation in chrome-extension/popup/popup.js to disable save button when required fields (position, company, posting_url, origin) are empty
-- [ ] T020 [US1] Add status message updates in chrome-extension/popup/popup.js: "Extracting job data..." when popup opens, "Review and save job posting" when ready, error messages when not on LinkedIn page
-- [ ] T021 [US1] Add console.log statements in chrome-extension/popup/popup.js for all errors, extraction results, and status changes
-- [ ] T022 [US1] Add error display in chrome-extension/popup/popup.html for non-LinkedIn pages with message "Please navigate to a LinkedIn job posting to use this extension"
+- [X] T014 [P] [US1] Create chrome-extension/popup/popup.html with form containing 10 visible input fields (Position*, Company*, Posting URL*, Origin*, Match, Work Arrangement, Demand, Budget, City, Country) and Save button
+- [X] T015 [P] [US1] Implement chrome-extension/content/content_script.js with scrapeLinkedInJob() function to extract position (h1.top-card-layout__title), company (a.topcard__org-name-link), posting_url (window.location.href), and job_description (.jobs-description__content with innerText)
+- [X] T016 [US1] Implement chrome-extension/popup/popup.js with initialization: check if current tab is LinkedIn job page using isLinkedInJobPage(), execute content_script.js via chrome.scripting.executeScript(), receive scraped data
+- [X] T017 [US1] Implement prefillForm() function in chrome-extension/popup/popup.js to populate form fields from scraped data and store extractedJobDescription variable
+- [X] T018 [US1] Implement getFormData() function in chrome-extension/popup/popup.js to collect form values (trim strings, parse budget as number, include job_description from extractedJobDescription variable)
+- [X] T019 [US1] Add validation in chrome-extension/popup/popup.js to disable save button when required fields (position, company, posting_url, origin) are empty
+- [X] T020 [US1] Add status message updates in chrome-extension/popup/popup.js: "Extracting job data..." when popup opens, "Review and save job posting" when ready, error messages when not on LinkedIn page
+- [X] T021 [US1] Add console.log statements in chrome-extension/popup/popup.js for all errors, extraction results, and status changes
+- [X] T022 [US1] Add error display in chrome-extension/popup/popup.html for non-LinkedIn pages with message "Please navigate to a LinkedIn job posting to use this extension"
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - popup opens, scrapes data, displays form with editable pre-filled fields
 
@@ -81,17 +81,17 @@
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Enhance chrome-extension/content/content_script.js to extract city from location information when available
-- [ ] T024 [P] [US2] Enhance chrome-extension/content/content_script.js to extract country from location information when available
+- [X] T023 [P] [US2] Enhance chrome-extension/content/content_script.js to extract city from location information when available
+- [X] T024 [P] [US2] Enhance chrome-extension/content/content_script.js to extract country from location information when available
 - [ ] T025 [P] [US2] Enhance chrome-extension/content/content_script.js to extract match level from LinkedIn AI match indicator when available
 - [ ] T026 [P] [US2] Enhance chrome-extension/content/content_script.js to extract work_arrangement from job details section when available
 - [ ] T027 [P] [US2] Enhance chrome-extension/content/content_script.js to extract demand from number of applicants when available
 - [ ] T028 [P] [US2] Enhance chrome-extension/content/content_script.js to extract budget from salary information when available
-- [ ] T029 [US2] Add extraction failure detection in chrome-extension/popup/popup.js: check if required fields (position, company) are null after scraping
-- [ ] T030 [US2] Implement warning display in chrome-extension/popup/popup.js: show "Auto-extraction failed for [field name]. Please enter manually." for failed required fields
-- [ ] T031 [US2] Update save button validation in chrome-extension/popup/popup.js: block save (disable button) until all required fields have values (whether extracted or manually entered)
-- [ ] T032 [US2] Add console logging in chrome-extension/content/content_script.js for all extraction attempts (success and failure) with field names and values
-- [ ] T033 [US2] Preserve job_description formatting in chrome-extension/content/content_script.js using innerText to maintain line breaks and structure
+- [X] T029 [US2] Add extraction failure detection in chrome-extension/popup/popup.js: check if required fields (position, company) are null after scraping
+- [X] T030 [US2] Implement warning display in chrome-extension/popup/popup.js: show "Auto-extraction failed for [field name]. Please enter manually." for failed required fields
+- [X] T031 [US2] Update save button validation in chrome-extension/popup/popup.js: block save (disable button) until all required fields have values (whether extracted or manually entered)
+- [X] T032 [US2] Add console logging in chrome-extension/content/content_script.js for all extraction attempts (success and failure) with field names and values
+- [X] T033 [US2] Preserve job_description formatting in chrome-extension/content/content_script.js using innerText to maintain line breaks and structure
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work - popup extracts all available data, handles extraction failures gracefully, allows manual entry
 
@@ -105,21 +105,21 @@
 
 ### Implementation for User Story 3
 
-- [ ] T034 [P] [US3] Implement validate_job_posting() optional field validation in backend/src/api/validators.py: match enum (low/medium/high), work_arrangement enum (remote/hybrid/on-site), demand enum (0-50/51-200/201-500/500+), budget positive number, city max 200 chars, country max 200 chars
-- [ ] T035 [US3] Implement validate_database() method in backend/src/services/notion_service.py: retrieve database schema, verify required properties exist (Position title, Company rich_text, Posting URL url, Origin select), verify optional properties if present
-- [ ] T036 [US3] Implement check_duplicate() method in backend/src/services/notion_service.py: query database for posting_url match, return existing page ID if found
-- [ ] T037 [US3] Implement create_job_posting() method in backend/src/services/notion_service.py: build Notion API payload with required fields (Position title, Company rich_text, Posting URL url, Origin select), conditionally add optional fields if provided (Match, Work Arrangement, Demand, Budget, Job Description, City, Country), call notion.pages.create()
-- [ ] T038 [US3] Implement POST /api/job-postings route in backend/src/api/routes.py: validate request with validate_job_posting(), check for duplicates with check_duplicate(), call create_job_posting(), return 201 with notion_page_id and notion_page_url
-- [ ] T039 [US3] Implement GET /health route in backend/src/api/routes.py: call validate_database(), return 200 with notion_connected and database_validated flags
-- [ ] T040 [US3] Add error handling in backend/src/api/routes.py for validation errors (400), duplicate URLs (409), Notion auth errors (401), database not found (404), rate limits (429), timeouts (504), generic errors (500)
-- [ ] T041 [US3] Add console logging in backend/src/api/routes.py for all API requests, Notion API calls, validation failures, and errors
-- [ ] T042 [US3] Implement saveJobToNotion() function in chrome-extension/popup/popup.js: send POST request to http://localhost:5000/api/job-postings with form data from getFormData(), handle response
-- [ ] T043 [US3] Add form submission handler in chrome-extension/popup/popup.js: prevent default, disable save button, call saveJobToNotion(), show success message with Notion page URL, close popup after 2 seconds
+- [X] T034 [P] [US3] Implement validate_job_posting() optional field validation in backend/src/api/validators.py: match enum (low/medium/high), work_arrangement enum (remote/hybrid/on-site), demand enum (0-50/51-200/201-500/500+), budget positive number, city max 200 chars, country max 200 chars
+- [X] T035 [US3] Implement validate_database() method in backend/src/services/notion_service.py: retrieve database schema, verify required properties exist (Position title, Company rich_text, Posting URL url, Origin select), verify optional properties if present
+- [X] T036 [US3] Implement check_duplicate() method in backend/src/services/notion_service.py: query database for posting_url match, return existing page ID if found
+- [X] T037 [US3] Implement create_job_posting() method in backend/src/services/notion_service.py: build Notion API payload with required fields (Position title, Company rich_text, Posting URL url, Origin select), conditionally add optional fields if provided (Match, Work Arrangement, Demand, Budget, Job Description, City, Country), call notion.pages.create()
+- [X] T038 [US3] Implement POST /api/job-postings route in backend/src/api/routes.py: validate request with validate_job_posting(), check for duplicates with check_duplicate(), call create_job_posting(), return 201 with notion_page_id and notion_page_url
+- [X] T039 [US3] Implement GET /health route in backend/src/api/routes.py: call validate_database(), return 200 with notion_connected and database_validated flags
+- [X] T040 [US3] Add error handling in backend/src/api/routes.py for validation errors (400), duplicate URLs (409), Notion auth errors (401), database not found (404), rate limits (429), timeouts (504), generic errors (500)
+- [X] T041 [US3] Add console logging in backend/src/api/routes.py for all API requests, Notion API calls, validation failures, and errors
+- [X] T042 [US3] Implement saveJobToNotion() function in chrome-extension/popup/popup.js: send POST request to http://localhost:5000/api/job-postings with form data from getFormData(), handle response
+- [X] T043 [US3] Add form submission handler in chrome-extension/popup/popup.js: prevent default, disable save button, call saveJobToNotion(), show success message with Notion page URL, close popup after 2 seconds
 - [ ] T044 [US3] Add duplicate handling in chrome-extension/popup/popup.js: detect 409 response, display existing entry values vs. new form values (highlight differences), show Update/Cancel prompt, require confirmation before calling update endpoint
-- [ ] T045 [US3] Add backend error handling in chrome-extension/popup/popup.js: detect unreachable backend (network error), show "Backend server not running. Please start Flask server (see setup docs)" with link to quickstart.md
-- [ ] T046 [US3] Add Notion API error handling in chrome-extension/popup/popup.js: detect rate limit (429) → show "Notion API rate limit reached. Retry in 5 seconds?" with Retry button, detect timeout (504) → show "Notion API timeout. Would you like to retry?" with Retry button, detect auth error (401) → show "Failed to connect to Notion. Check API credentials and retry." with Retry button, detect other errors → show "Failed to save to Notion: [error message]. Retry?" with Retry button
+- [X] T045 [US3] Add backend error handling in chrome-extension/popup/popup.js: detect unreachable backend (network error), show "Backend server not running. Please start Flask server (see setup docs)" with link to quickstart.md
+- [X] T046 [US3] Add Notion API error handling in chrome-extension/popup/popup.js: detect rate limit (429) → show "Notion API rate limit reached. Retry in 5 seconds?" with Retry button, detect timeout (504) → show "Notion API timeout. Would you like to retry?" with Retry button, detect auth error (401) → show "Failed to connect to Notion. Check API credentials and retry." with Retry button, detect other errors → show "Failed to save to Notion: [error message]. Retry?" with Retry button
 - [ ] T047 [US3] Implement retry functionality in chrome-extension/popup/popup.js: preserve all form data when Retry button is clicked, re-attempt save with same data
-- [ ] T048 [US3] Add console logging in chrome-extension/popup/popup.js for all API calls (request payload, response status, response body, errors)
+- [X] T048 [US3] Add console logging in chrome-extension/popup/popup.js for all API calls (request payload, response status, response body, errors)
 
 **Checkpoint**: All user stories should now be independently functional - complete end-to-end flow from LinkedIn → Extension → Flask → Notion works with full error handling
 
@@ -129,13 +129,13 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T049 [P] Create backend/README.md with setup instructions, virtual environment commands, environment variable configuration, running the server
-- [ ] T050 [P] Create chrome-extension/README.md with extension installation instructions (load unpacked), testing on LinkedIn job pages
-- [ ] T051 Update backend/src/config/settings.py docstrings and add inline comments for configuration values
-- [ ] T052 Update chrome-extension/popup/popup.js with detailed comments explaining flow: initialization → scraping → form prefill → validation → save → error handling
-- [ ] T053 Verify all console logging follows consistent format: component name, log level, message, relevant data
+- [X] T049 [P] Create backend/README.md with setup instructions, virtual environment commands, environment variable configuration, running the server
+- [X] T050 [P] Create chrome-extension/README.md with extension installation instructions (load unpacked), testing on LinkedIn job pages
+- [X] T051 Update backend/src/config/settings.py docstrings and add inline comments for configuration values
+- [X] T052 Update chrome-extension/popup/popup.js with detailed comments explaining flow: initialization → scraping → form prefill → validation → save → error handling
+- [X] T053 Verify all console logging follows consistent format: component name, log level, message, relevant data
 - [ ] T054 Run manual testing per quickstart.md validation: test extraction accuracy on 5 different LinkedIn job postings, test error scenarios (backend offline, invalid credentials, duplicate URL), test optional field handling (empty vs. populated)
-- [ ] T055 Code review for hardcoded values: verify BACKEND_URL uses localhost:5000, verify CORS allows chrome-extension://* origins, verify Notion API version matches notion-client 2.2+
+- [X] T055 Code review for hardcoded values: verify BACKEND_URL uses localhost:5000, verify CORS allows chrome-extension://* origins, verify Notion API version matches notion-client 2.2+
 
 ---
 

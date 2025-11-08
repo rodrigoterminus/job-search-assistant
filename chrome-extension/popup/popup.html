@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Job Posting Collector</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Save Job to Notion</h1>
+    
+    <div id="status" class="status">Review and save job posting</div>
+    
+    <form id="job-form">
+      <!-- Required Fields -->
+      <div class="form-group">
+        <label for="position">Position <span class="required">*</span></label>
+        <input type="text" id="position" name="position" required maxlength="500" />
+      </div>
+      
+      <div class="form-group">
+        <label for="company">Company <span class="required">*</span></label>
+        <input type="text" id="company" name="company" required maxlength="200" />
+      </div>
+      
+      <!-- Hidden posting URL field (used behind the scenes) -->
+      <input type="hidden" id="posting_url" name="posting_url" required />
+      
+      <!-- Optional Fields - Row Layout -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="match">Match Level</label>
+          <select id="match" name="match">
+            <option value="">-- Select --</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="work_arrangement">Work Arrangement</label>
+          <select id="work_arrangement" name="work_arrangement">
+            <option value="">-- Select --</option>
+            <option value="remote">Remote</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="on-site">On-site</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="demand">Demand</label>
+          <select id="demand" name="demand">
+            <option value="">-- Select --</option>
+            <option value="0-50">0-50 applicants</option>
+            <option value="51-200">51-200 applicants</option>
+            <option value="201-500">201-500 applicants</option>
+            <option value="500+">500+ applicants</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="budget">Budget/Salary</label>
+          <input type="number" id="budget" name="budget" min="0" step="1000" />
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="city">City</label>
+          <input type="text" id="city" name="city" maxlength="200" />
+        </div>
+        
+        <div class="form-group">
+          <label for="country">Country</label>
+          <input type="text" id="country" name="country" maxlength="200" />
+        </div>
+      </div>
+      
+      <button type="submit" id="save-btn" class="save-btn">Save to Notion</button>
+    </form>
+    
+    <div id="error" class="error"></div>
+    <div id="success" class="success"></div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
