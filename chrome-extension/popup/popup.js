@@ -9,6 +9,7 @@ const BACKEND_URL = 'http://localhost:3000';
 const statusEl = document.getElementById('status');
 const formEl = document.getElementById('job-form');
 const saveBtn = document.getElementById('save-btn');
+const openBtn = document.getElementById('open-btn');
 const errorEl = document.getElementById('error');
 const successEl = document.getElementById('success');
 
@@ -27,6 +28,65 @@ const fields = {
 
 // Hidden field: job_description is extracted but not displayed in UI
 let extractedJobDescription = null;
+
+// State for existing job posting
+let existingPageId = null;
+let existingPageUrl = null;
+
+/**
+ * Check if job posting already exists in Notion
+ */
+async function checkJobExists(postingUrl) {
+  console.log('[Popup] Checking if job exists:', postingUrl);
+  
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/job-postings/check?posting_url=${encodeURIComponent(postingUrl)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.warn('[Popup] Check request failed:', response.status);
+      return { exists: false };
+    }
+    
+    const data = await response.json();
+    console.log('[Popup] Check response:', data);
+    return data;
+  } catch (error) {
+    console.error('[Popup] Check error:', error);
+    return { exists: false };
+  }
+}
+
+/**
+ * Open existing job posting in Notion
+ */
+function openOnNotion() {
+  if (existingPageUrl) {
+    console.log('[Popup] Opening Notion page:', existingPageUrl);
+    chrome.tabs.create({ url: existingPageUrl });
+  }
+}
+
+/**
+ * Update button states based on whether job exists
+ */
+function updateButtonStates(exists) {
+  if (exists) {
+    // Job exists - enable "Open on Notion" + change label to "Update in Notion"
+    openBtn.disabled = false;
+    saveBtn.textContent = 'Update in Notion';
+    console.log('[Popup] Buttons configured for existing job (update mode)');
+  } else {
+    // Job doesn't exist - disable "Open on Notion" + label as "Save to Notion"
+    openBtn.disabled = true;
+    saveBtn.textContent = 'Save to Notion';
+    console.log('[Popup] Buttons configured for new job (create mode)');
+  }
+}
 
 /**
  * Update status message
@@ -171,6 +231,11 @@ function getFormData() {
     origin: 'LinkedIn'
   };
   
+  // Add page_id if updating existing job
+  if (existingPageId) {
+    data.page_id = existingPageId;
+  }
+  
   // Add optional visible fields if they have values
   if (fields.match.value) data.match = fields.match.value;
   if (fields.work_arrangement.value) data.work_arrangement = fields.work_arrangement.value;
@@ -187,7 +252,8 @@ function getFormData() {
   
   console.log('[Popup] Collected form data:', {
     ...data,
-    job_description: data.job_description ? data.job_description.length + ' chars' : 'none'
+    job_description: data.job_description ? data.job_description.length + ' chars' : 'none',
+    page_id: data.page_id || 'none (new job)'
   });
   
   return data;
@@ -229,6 +295,9 @@ fields.position.addEventListener('input', updateSaveButton);
 fields.company.addEventListener('input', updateSaveButton);
 fields.posting_url.addEventListener('input', updateSaveButton);
 
+// Add click event listener for "Open on Notion" button
+openBtn.addEventListener('click', openOnNotion);
+
 /**
  * Save job to Notion via Flask backend
  */
@@ -267,10 +336,7 @@ async function saveJobToNotion(jobData) {
     
     if (!response.ok) {
       // Handle specific error types
-      if (response.status === 409) {
-        // Duplicate detected
-        throw new Error(`Duplicate: This job posting already exists in your Notion database. View it here: ${data.existing_page_url}`);
-      } else if (response.status === 429) {
+      if (response.status === 429) {
         // Rate limit
         throw new Error('Notion API rate limit reached. Retry in 5 seconds?');
       } else if (response.status === 504) {
@@ -316,16 +382,21 @@ formEl.addEventListener('submit', async (e) => {
     const jobData = getFormData();
     const result = await saveJobToNotion(jobData);
     
-    setStatus('Saved successfully!', 'success');
-    showSuccess(`Job saved to Notion! View: ${result.notion_page_url}`);
+    const isUpdate = !!existingPageId;
+    const successMessage = isUpdate ? 'Job updated in Notion!' : 'Job saved to Notion!';
+    
+    setStatus(successMessage, 'success');
+    showSuccess(`${successMessage} View: ${result.notion_page_url}`);
     
     console.log('[Popup] Save successful:', result);
     
-    // Optional: Close popup after success
-    setTimeout(() => {
-      console.log('[Popup] Closing popup');
-      window.close();
-    }, 2000);
+    // Update state and button after successful save/update
+    if (!isUpdate) {
+      // New job was created, update to show as existing
+      existingPageId = result.notion_page_id;
+      existingPageUrl = result.notion_page_url;
+      updateButtonStates(true);
+    }
   } catch (error) {
     console.error('[Popup] Save error:', error);
     setStatus('Ready to save', 'normal');
@@ -356,7 +427,31 @@ formEl.addEventListener('submit', async (e) => {
     const scrapedData = await scrapeJobData();
     
     prefillForm(scrapedData);
-    setStatus('Review and save job posting');
+    
+    // Check if job already exists in Notion
+    if (scrapedData.posting_url) {
+      setStatus('Checking Notion...', 'loading');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Checking...';
+      
+      const checkResult = await checkJobExists(scrapedData.posting_url);
+      
+      if (checkResult.exists) {
+        existingPageId = checkResult.page_id;
+        existingPageUrl = checkResult.page_url;
+        updateButtonStates(true);
+        setStatus('Job already saved - review and update if needed');
+        console.log('[Popup] Existing job found:', existingPageId);
+      } else {
+        updateButtonStates(false);
+        setStatus('Review and save job posting');
+        console.log('[Popup] New job - ready to save');
+      }
+    } else {
+      updateButtonStates(false);
+      setStatus('Review and save job posting');
+    }
+    
     updateSaveButton();
     
     console.log('[Popup] Initialization complete');
@@ -365,6 +460,7 @@ formEl.addEventListener('submit', async (e) => {
     console.error('[Popup] Initialization error:', error);
     setStatus('Error extracting data');
     showError('Could not extract job data. You can still manually fill the form.');
+    updateButtonStates(false);
     updateSaveButton();
   }
 })();

@@ -11,7 +11,7 @@
 
 **Q1: Duplicate Job Posting Detection**
 - **Question**: When saving a job posting that already exists in Notion (same posting_url), should the system: A) Silently skip, B) Update existing, or C) Prompt user?
-- **Answer**: C - Prompt user to Update or Cancel, showing field differences and requiring confirmation before overwriting
+- **Answer**: On popup load, check if job exists. Configure UI accordingly: Button A ("Open on Notion") enabled if exists, Button B shows "Update in Notion" if exists or "Save to Notion" if new. User can click Update to directly update existing entry or click Open to view in Notion first.
 
 **Q2: Backend Server Unreachable**
 - **Question**: When the Flask backend (localhost:5000) is not running, should the system: A) Show generic error, B) Show specific "server not running" message with setup link, or C) Queue for later?
@@ -42,11 +42,18 @@ As a job seeker, when I find an interesting job posting on LinkedIn, I want to c
 **Acceptance Scenarios**:
 
 1. **Given** I am viewing a LinkedIn job posting, **When** I click the browser extension icon, **Then** the extension popup opens with a form displaying all job posting fields
-2. **Given** the extension popup is open, **When** the page loads, **Then** all available fields are automatically pre-filled with data scraped from the LinkedIn page
-3. **Given** I see the pre-filled form, **When** I review the extracted data, **Then** I can edit any field before saving
-4. **Given** I have reviewed the data, **When** I click the "Save Job" button, **Then** the system provides immediate visual feedback that the save action has been initiated
-5. **Given** the job posting page has loaded completely, **When** I open the extension popup, **Then** all editable fields are clearly visible and easily accessible
-6. **Given** I am not on a LinkedIn job posting page, **When** I navigate to another website, **Then** the extension popup shows an appropriate message that this page is not supported
+2. **Given** the extension popup is open, **When** the page loads, **Then** the system checks if this job already exists in Notion and configures button states accordingly
+3. **Given** the system is checking if the job exists in Notion, **When** the check is in progress, **Then** the primary button (Button B) is disabled and displays "Checking..." until the check completes
+4. **Given** the popup has finished loading, **When** the job does not exist in Notion, **Then** I see both buttons visible: "Open on Notion" button (Button A) is disabled and grayed out, and "Save to Notion" button (Button B) is enabled
+5. **Given** the popup has finished loading, **When** the job already exists in Notion, **Then** I see both buttons visible and enabled: "Open on Notion" button (Button A) and "Update in Notion" button (Button B)
+6. **Given** the extension popup is open, **When** the page loads, **Then** all available fields are automatically pre-filled with data scraped from the LinkedIn page
+7. **Given** I see the pre-filled form, **When** I review the extracted data, **Then** I can edit any field before saving or updating
+8. **Given** the job exists in Notion, **When** I click the "Open on Notion" button (Button A), **Then** the job application page opens in a new browser tab
+9. **Given** I have reviewed the data, **When** I click the "Save to Notion" or "Update in Notion" button (Button B), **Then** the system provides immediate visual feedback that the save/update action has been initiated
+10. **Given** I successfully save a new job, **When** the save completes, **Then** the "Open on Notion" button becomes enabled and the primary button changes to "Update in Notion"
+11. **Given** I successfully save or update a job, **When** the operation completes, **Then** the popup remains open to allow further interaction with the buttons or form
+12. **Given** the job posting page has loaded completely, **When** I open the extension popup, **Then** all editable fields are clearly visible and easily accessible
+13. **Given** I am not on a LinkedIn job posting page, **When** I navigate to another website, **Then** the extension popup shows an appropriate message that this page is not supported
 
 ---
 
@@ -90,12 +97,12 @@ As a job seeker, when I review the extracted job details and click save, I want 
 
 ### Edge Cases
 
-- When LinkedIn page structure changes and extraction fails to find Position or Company fields, the system shows a warning message "Auto-extraction failed for [field name]" in the popup, leaves the field empty for manual entry, and blocks the save button until the user provides the required data
+- When LinkedIn page structure changes and extraction fails to find Position or Company fields, the system shows a warning message "Auto-extraction failed for [field name]" in the popup, leaves the field empty for manual entry, and blocks the save/update button until the user provides the required data
 - How does the system handle job postings that are missing key information (e.g., no company name listed)?
 - What happens if the user's Notion database is temporarily unavailable or the credentials are invalid?
-- When saving a job posting with a URL that already exists in Notion, the system displays the existing entry's values alongside the new form values (highlighting differences), then prompts the user to either Update the existing entry or Cancel the save operation
-- What happens if the user clicks the save button without reviewing or editing the pre-filled data?
-- What happens if the user manually clears a required field before clicking save?
+- When the popup loads and detects the job already exists in Notion (by URL), the system enables the "Open on Notion" button and changes the primary button label to "Update in Notion", allowing the user to either view the existing entry or update it with current form values
+- What happens if the user clicks the update button without reviewing or editing the pre-filled data?
+- What happens if the user manually clears a required field before clicking save/update?
 - When the backend Flask server is not running or unreachable, the extension immediately displays a clear error message: "Backend server not running. Please start Flask server (see setup docs)" with a link to the quickstart guide
 - When the Notion API call fails after the Flask backend successfully receives the request, the system displays specific error messages based on the failure type (rate limit: "Notion API rate limit reached. Retry in 5 seconds?", timeout: "Notion API timeout. Would you like to retry?", authentication: "Failed to connect to Notion. Check API credentials and retry.", other: "Failed to save to Notion: [error message]. Retry?"), provides a "Retry" button in the popup, and preserves all form data during retry attempts
 - What happens when the LinkedIn page is still loading and the user opens the extension popup?
@@ -111,6 +118,10 @@ As a job seeker, when I review the extracted job details and click save, I want 
 ### Functional Requirements
 
 - **FR-001**: System MUST provide a browser extension popup interface when the user clicks the extension icon
+- **FR-001a**: System MUST render two action buttons in the popup interface: "Open on Notion" (Button A, secondary) and a primary action button (Button B)
+- **FR-001b**: System MUST check on popup load whether the current job posting already exists in Notion (by URL)
+- **FR-001c**: System MUST configure button states based on whether job exists in Notion
+- **FR-001d**: System MUST disable the primary button (Button B) and display "Checking..." label while checking if job exists in Notion
 - **FR-002**: System MUST detect when the user is on a LinkedIn job posting page versus other pages
 - **FR-003**: System MUST display an editable form in the extension popup with visible job posting fields (Position, Company, Posting URL, Origin, Match, Work Arrangement, Demand, Budget, City, Country)
 - **FR-004**: System MUST automatically extract and pre-fill the Position field from the LinkedIn job posting page when the popup opens
@@ -125,19 +136,31 @@ As a job seeker, when I review the extracted job details and click save, I want 
 - **FR-013**: System MUST attempt to extract and pre-fill City from the job posting location information when available
 - **FR-014**: System MUST attempt to extract and pre-fill Country from the job posting location information when available
 - **FR-015**: System MUST allow users to edit any visible pre-filled field in the popup form before saving
-- **FR-016**: System MUST validate that required fields (Position, Company, Posting URL, Origin) are not empty when the user clicks save
-- **FR-018**: System MUST block save button until all required fields contain data (whether auto-extracted or manually entered)
-- **FR-019**: System MUST send the user-reviewed form data plus the extracted Job Description (including any edits) to the backend API when the save button is clicked
+- **FR-016**: System MUST validate that required fields (Position, Company, Posting URL, Origin) are not empty when the user clicks save or update
+- **FR-017**: System MUST display "Open on Notion" button (Button A) as always visible in the popup interface
+- **FR-017a**: System MUST display "Open on Notion" button (Button A) in disabled state (grayed out) when job does not exist in Notion
+- **FR-017b**: System MUST display "Open on Notion" button (Button A) in enabled state when job exists in Notion
+- **FR-017c**: System MUST open the existing Notion job application page in a new browser tab when user clicks enabled "Open on Notion" button
+- **FR-017d**: System MUST display primary button (Button B) with label "Save to Notion" when job does not exist in Notion
+- **FR-017e**: System MUST display primary button (Button B) with label "Update in Notion" when job already exists in Notion
+- **FR-017f**: System MUST create a new Notion entry when user clicks "Save to Notion" button
+- **FR-017g**: System MUST update the existing Notion entry when user clicks "Update in Notion" button
+- **FR-017h**: System MUST enable "Open on Notion" button and change primary button label to "Update in Notion" after successful save of new job
+- **FR-017i**: System MUST keep the popup open after successful save or update operations to allow further user interaction
+- **FR-018**: System MUST block save/update button until all required fields contain data (whether auto-extracted or manually entered)
+- **FR-019**: System MUST send the user-reviewed form data plus the extracted Job Description (including any edits) to the backend API when the save or update button is clicked
 - **FR-020**: System MUST preserve original formatting (HTML/rich text) when extracting and sending Job Description to the backend
-- **FR-021**: System MUST create a new entry in the user's Notion "Job Applications" database with the values from the popup form and extracted Job Description
+- **FR-021**: System MUST create a new entry in the user's Notion "Job Applications" database with the values from the popup form and extracted Job Description when "Save to Notion" is clicked
+- **FR-021a**: System MUST update the existing entry in the user's Notion "Job Applications" database with the values from the popup form and extracted Job Description when "Update in Notion" is clicked
 - **FR-022**: System MUST NOT send Level, Recruiter, Talent Acquisition, or Hiring Manager fields in API requests (these are populated by Notion AI Autofill)
-- **FR-023**: System MUST provide clear status updates to the user during the save process (extracting, saving, complete)
+- **FR-023**: System MUST provide clear status updates to the user during the save/update process (checking existence, extracting, saving/updating, complete)
 - **FR-024**: System MUST handle missing or incomplete data gracefully, allowing users to manually fill in the popup form
-- **FR-025**: System MUST detect duplicate job postings based on URL and prevent creating duplicate Notion entries
-- **FR-026**: System MUST retrieve existing entry data when duplicate URL is detected and display field-by-field comparison in the popup (highlighting differences between existing and new values)
-- **FR-027**: System MUST prompt user with choice to Update existing entry or Cancel when duplicate is detected
-- **FR-028**: System MUST require explicit user confirmation before updating an existing Notion entry
-- **FR-029**: System MUST provide error messages when the save process fails, with clear explanation of the issue
+- **FR-025**: System MUST detect duplicate job postings based on URL during initial popup load to configure button states
+- **FR-025a**: System MUST retrieve existing entry data (page ID and URL) when duplicate URL is detected during popup load
+- **FR-026**: System MUST display existing job's Notion page ID internally for "Open on Notion" functionality
+- **FR-027**: System MUST construct proper Notion page URL from page ID for "Open on Notion" button
+- **FR-028**: System MUST update button states immediately after successful save (enable "Open on Notion", change label to "Update in Notion")
+- **FR-029**: System MUST provide error messages when the save/update process fails, with clear explanation of the issue
 - **FR-030**: System MUST detect when backend server (localhost:5000) is unreachable and display specific error message: "Backend server not running. Please start Flask server (see setup docs)" with link to quickstart documentation
 - **FR-029**: System MUST validate that required Notion database fields exist before attempting to save
 - **FR-030**: System MUST detect when backend server (localhost:5000) is unreachable and display specific error message: "Backend server not running. Please start Flask server (see setup docs)" with link to quickstart documentation
@@ -158,10 +181,13 @@ As a job seeker, when I review the extracted job details and click save, I want 
 ### Key Entities
 
 - **Job Posting Form (Extension Popup)**: Represents the editable user interface displayed in the Chrome Extension popup. Key attributes include:
+  - **Action buttons**: Two buttons always visible - Button A ("Open on Notion", secondary, disabled when job doesn't exist, enabled when job exists or after successful save) and Button B (primary, label changes between "Save to Notion" and "Update in Notion" based on existence check)
+  - **Existence state**: Boolean indicating whether job already exists in Notion (determined on popup load via URL check)
+  - **Notion page reference**: Page ID and URL of existing Notion entry (retrieved during existence check, used for "Open on Notion" functionality)
   - **Visible form fields**: 10 editable inputs displayed to user (Position, Company, Posting URL, Origin, Match, Work Arrangement, Demand, Budget, City, Country)
   - **Hidden field**: Job Description (extracted but not displayed in UI, sent to backend with preserved formatting)
   - **Pre-filled values**: Automatically populated from scraped LinkedIn data when popup opens
-  - **User edits**: Any modifications made by user to visible fields before clicking save
+  - **User edits**: Any modifications made by user to visible fields before clicking save/update
   - **Validation state**: Real-time feedback on required fields and format constraints
 
 - **Job Posting Data**: Represents the final validated data submitted from the popup form to the backend. Key attributes include:
@@ -175,16 +201,22 @@ As a job seeker, when I review the extracted job details and click save, I want 
 
 ### Measurable Outcomes
 
-- **SC-001**: User can review and save a job posting from LinkedIn to Notion in under 15 seconds from opening the popup to seeing confirmation
-- **SC-002**: Extension popup opens within 1 second of clicking the extension icon
-- **SC-003**: All form fields are visible and properly labeled in the popup interface
+- **SC-001**: User can review and save/update a job posting from LinkedIn to Notion in under 15 seconds from opening the popup to seeing confirmation
+- **SC-002**: Extension popup opens and completes existence check within 2 seconds of clicking the extension icon
+- **SC-003**: All form fields and both action buttons are visible and properly labeled in the popup interface
+- **SC-003a**: Both buttons are always visible: "Open on Notion" button appears disabled (grayed out) when job doesn't exist, enabled when job exists
+- **SC-003b**: Primary button (Button B) is disabled and displays "Checking..." label during the existence check phase
+- **SC-003c**: Button states correctly reflect job existence status within 2 seconds of popup load
+- **SC-003d**: "Open on Notion" button successfully opens existing job page in Notion 100% of the time when enabled
 - **SC-004**: Job title extraction accuracy is at least 95% for standard LinkedIn job posting formats (pre-fills Position field)
 - **SC-005**: Company name extraction accuracy is at least 90% for standard LinkedIn job posting formats (pre-fills Company field)
 - **SC-006**: URL capture succeeds 100% of the time when on a valid LinkedIn job posting page (pre-fills Posting URL field)
-- **SC-007**: User can successfully edit any pre-filled field value before saving
-- **SC-008**: Duplicate job detection prevents 100% of re-saves for identical job URLs
-- **SC-009**: System provides user feedback within 2 seconds of clicking the save button in the popup
-- **SC-010**: Complete end-to-end save process (from popup to Notion) completes within 5 seconds for 95% of cases
+- **SC-007**: User can successfully edit any pre-filled field value before saving or updating
+- **SC-008**: Duplicate job detection correctly identifies existing entries by URL 100% of the time during popup load
+- **SC-008a**: Button states update correctly 100% of the time after successful save (enable "Open on Notion", change label to "Update in Notion")
+- **SC-008b**: Popup remains open after successful save or update operations, allowing user to continue interacting with buttons or form
+- **SC-009**: System provides user feedback within 2 seconds of clicking the save/update button in the popup
+- **SC-010**: Complete end-to-end save/update process (from popup to Notion) completes within 5 seconds for 95% of cases
 - **SC-011**: System gracefully handles and reports at least 90% of common error scenarios (network failures, missing data, authentication issues)
-- **SC-012**: User can successfully save at least 10 job postings consecutively without errors
-- **SC-013**: Saved jobs in Notion database match the form values from the popup (including user edits) with 100% accuracy
+- **SC-012**: User can successfully save and update at least 10 job postings consecutively without errors
+- **SC-013**: Saved/updated jobs in Notion database match the form values from the popup (including user edits) with 100% accuracy

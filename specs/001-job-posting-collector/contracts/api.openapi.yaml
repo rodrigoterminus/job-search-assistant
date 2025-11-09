@@ -21,6 +21,77 @@ tags:
     description: Operations for saving job postings to Notion
 
 paths:
+  /api/job-postings/check:
+    get:
+      tags:
+        - Job Postings
+      summary: Check if a job posting already exists in Notion
+      description: |
+        Checks if a job posting with the given URL already exists in the Notion database.
+        Used by the Chrome Extension on popup load to configure button states.
+        
+        **Flow**:
+        1. Extension loads popup
+        2. Extension sends GET request with posting_url
+        3. Backend queries Notion for matching URL
+        4. Backend returns existence status with page details if found
+        5. Extension configures "Open on Notion" and "Save/Update" buttons
+        
+      operationId: checkJobPosting
+      parameters:
+        - name: posting_url
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: LinkedIn job posting URL to check
+          example: "https://www.linkedin.com/jobs/view/1234567890"
+          
+      responses:
+        '200':
+          description: Check completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobExistsResponse'
+              examples:
+                exists:
+                  summary: Job already exists in Notion
+                  value:
+                    exists: true
+                    page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    page_url: "https://www.notion.so/a1b2c3d4e5f67890abcdef1234567890"
+                notExists:
+                  summary: Job does not exist in Notion
+                  value:
+                    exists: false
+                    
+        '400':
+          description: Invalid request - missing or invalid posting_url
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingUrl:
+                  summary: Missing posting_url parameter
+                  value:
+                    error: "posting_url query parameter is required"
+                    
+        '500':
+          description: Internal Server Error - Notion API query failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  summary: Notion query error
+                  value:
+                    error: "Failed to check job existence"
+                    details: "An unexpected error occurred. Check server logs."
+
   /api/job-postings:
     post:
       tags:
@@ -28,16 +99,22 @@ paths:
       summary: Save a LinkedIn job posting to Notion
       description: |
         Receives job posting data scraped from a LinkedIn page by the Chrome Extension,
-        validates the payload, checks for duplicates, and creates a new entry in the 
+        validates the payload, and creates a new entry or updates an existing entry in the 
         Notion "Job Applications" database.
         
-        **Flow**:
+        **Create Flow** (when page_id is not provided):
         1. Extension scrapes LinkedIn page
         2. Extension sends POST request with job data
         3. Backend validates required fields
-        4. Backend checks for duplicate URL in Notion
-        5. Backend creates new Notion page
-        6. Backend returns success with Notion page URL
+        4. Backend creates new Notion page
+        5. Backend returns success with Notion page URL
+        
+        **Update Flow** (when page_id is provided):
+        1. Extension scrapes LinkedIn page  
+        2. Extension sends POST request with job data and page_id
+        3. Backend validates required fields
+        4. Backend updates existing Notion page
+        5. Backend returns success with Notion page URL
         
       operationId: createJobPosting
       requestBody:
@@ -70,8 +147,28 @@ paths:
                   country: "United States"
                   
       responses:
+        '200':
+          description: Job posting successfully updated in Notion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPostingResponse'
+              examples:
+                updated:
+                  summary: Successful update
+                  value:
+                    message: "Job posting updated successfully"
+                    notion_page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    notion_page_url: "https://www.notion.so/a1b2c3d4e5f67890abcdef1234567890"
+                    job_data:
+                      position: "Senior Software Engineer"
+                      company: "Acme Corporation"
+                      posting_url: "https://www.linkedin.com/jobs/view/1234567890"
+                      origin: "LinkedIn"
+                      page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                      
         '201':
-          description: Job posting successfully saved to Notion
+          description: Job posting successfully created in Notion
           content:
             application/json:
               schema:
@@ -143,8 +240,28 @@ paths:
                     field: "position"
                     received: "   "
                     
+        '404':
+          description: Not Found - Notion page or database not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                pageNotFound:
+                  summary: Page ID not found (when updating)
+                  value:
+                    error: "Notion page not found"
+                    page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    details: "The specified page_id does not exist or is not accessible"
+                databaseNotFound:
+                  summary: Database ID not found
+                  value:
+                    error: "Notion database not found"
+                    database_id: "abc123xyz789"
+                    details: "Check NOTION_DATABASE_ID environment variable"
+                    
         '409':
-          description: Conflict - Job posting already exists in Notion database
+          description: Conflict - Job posting already exists in Notion database (only when creating without page_id)
           content:
             application/json:
               schema:
@@ -170,20 +287,6 @@ paths:
                   value:
                     error: "Notion authentication failed"
                     details: "Invalid API key or insufficient permissions"
-                    
-        '404':
-          description: Not Found - Notion database does not exist
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                databaseNotFound:
-                  summary: Database ID not found
-                  value:
-                    error: "Notion database not found"
-                    database_id: "abc123xyz789"
-                    details: "Check NOTION_DATABASE_ID environment variable"
                     
         '429':
           description: Too Many Requests - Notion API rate limit exceeded
@@ -273,6 +376,11 @@ components:
         - posting_url
         - origin
       properties:
+        page_id:
+          type: string
+          format: uuid
+          description: Notion page ID for updating existing job posting (optional, omit when creating new)
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
         position:
           type: string
           minLength: 1
@@ -376,6 +484,24 @@ components:
             origin:
               type: string
               example: "LinkedIn"
+              
+    JobExistsResponse:
+      type: object
+      properties:
+        exists:
+          type: boolean
+          description: Whether the job posting exists in Notion
+          example: true
+        page_id:
+          type: string
+          format: uuid
+          description: Notion page ID of existing job (only present when exists is true)
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        page_url:
+          type: string
+          format: uri
+          description: Direct URL to the Notion page (only present when exists is true)
+          example: "https://www.notion.so/a1b2c3d4e5f67890abcdef1234567890"
               
     ErrorResponse:
       type: object

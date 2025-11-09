@@ -104,7 +104,7 @@ The application interacts with four Notion databases:
 | `Budget` | Number | ✅ Yes (optional) | Salary budget |
 | `Job Description` | - | ✅ Yes (optional) | Added as callout block in page content (children), not as property |
 | `City` | Multi-select | ✅ Yes (optional) | City from location information |
-| `Country` | Rich Text | ✅ Yes (optional) | Country from location information |
+| `Country` | Select | ✅ Yes (optional) | Country from location information |
 | `Stage` | Status | ❌ No | Notion handles default value automatically |
 | `Level` | Select | ❌ No | Filled by Notion AI Autofill |
 | `Recruiter` | Rich Text | ❌ No | Filled by Notion AI Autofill |
@@ -185,13 +185,9 @@ The application interacts with four Notion databases:
             ]
         } if job_posting.city else None,
         "Country": {
-            "rich_text": [
-                {
-                    "text": {
-                        "content": job_posting.country
-                    }
-                }
-            ]
+            "select": {
+                "name": job_posting.country
+            }
         } if job_posting.country else None
     },
     # Job description is added as callout block in page content, not as a property
@@ -275,7 +271,7 @@ Before creating the job application page, the system performs the following:
   - `Demand` (type: select) - must have options: 0-50, 51-200, 201-500, 500+
   - `Budget` (type: number)
   - `City` (type: multi_select)
-  - `Country` (type: rich_text)
+  - `Country` (type: select)
 - AI Autofill properties (Level, Recruiter, Talent Acquisition, Hiring Manager) should exist but are not validated or populated by the application
 
 **Constraints**:
@@ -368,8 +364,8 @@ Before creating the job application page, the system performs the following:
 | Number of applicants | `demand` | `Demand` | Select | No (extracted) |
 | Salary information | `budget` | `Budget` | Number | No (extracted) |
 | Job details section | `job_description` | `Job Description` | Rich Text | No (extracted) |
-| Location information | `city` | `City` | Rich Text | No (extracted) |
-| Location information | `country` | `Country` | Rich Text | No (extracted) |
+| Location information | `city` | `City` | Multi-select | No (extracted) |
+| Location information | `country` | `Country` | Select | No (extracted) |
 | N/A | - | `Level` | Select | No (AI Autofill) |
 | N/A | - | `Recruiter` | Rich Text | No (AI Autofill) |
 | N/A | - | `Talent Acquisition` | Rich Text | No (AI Autofill) |
@@ -434,7 +430,7 @@ On Flask application startup, the backend SHOULD validate the Notion database sc
    - `Demand` (type: select)
    - `Budget` (type: number)
    - `City` (type: multi_select)
-   - `Country` (type: rich_text)
+   - `Country` (type: select)
 4. Match select has options: "low", "medium", "high"
 5. Work Arrangement select has options: "remote", "hybrid", "on-site"
 6. Demand select has options: "0-50", "51-200", "201-500", "500+"

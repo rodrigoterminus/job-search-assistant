@@ -246,13 +246,9 @@ class NotionService:
         
         if country:
             properties["Country"] = {
-                "rich_text": [
-                    {
-                        "text": {
-                            "content": country
-                        }
-                    }
-                ]
+                "select": {
+                    "name": country
+                }
             }
         
         logger.info(f"Creating Notion page for: {position} at {company}")
@@ -310,4 +306,171 @@ class NotionService:
             return response
         except APIResponseError as e:
             logger.error(f"Error creating Notion page: {e}")
+            raise
+    
+    def update_job_posting(self, page_id: str, position: str, company: str, 
+                          posting_url: str, origin: str = 'LinkedIn',
+                          match: Optional[str] = None,
+                          work_arrangement: Optional[str] = None,
+                          demand: Optional[str] = None,
+                          budget: Optional[float] = None,
+                          job_description: Optional[str] = None,
+                          city: Optional[str] = None,
+                          country: Optional[str] = None) -> Dict:
+        """Update existing job posting entry in Notion database.
+        
+        Args:
+            page_id: Notion page ID to update
+            position: Job title
+            company: Company name
+            posting_url: LinkedIn URL
+            origin: Source platform (default: LinkedIn)
+            match: Match level (low/medium/high) - optional
+            work_arrangement: Work arrangement (remote/hybrid/on-site) - optional
+            demand: Company size (0-50/51-200/201-500/500+) - optional
+            budget: Salary budget - optional
+            job_description: Full job description text - will update page content
+            city: City location - optional
+            country: Country location - optional
+            
+        Returns:
+            Updated page object from Notion API
+        """
+        # Find or create company in Companies database
+        company_id = self.find_or_create_company(company)
+        
+        properties = {
+            "Position": {
+                "title": [
+                    {
+                        "text": {
+                            "content": position
+                        }
+                    }
+                ]
+            },
+            "Posting URL": {
+                "url": posting_url
+            },
+            "Source": {
+                "select": {
+                    "name": "LinkedIn"
+                }
+            },
+            "Origin": {
+                "select": {
+                    "name": "Applied"
+                }
+            }
+        }
+        
+        # Add Company as relation if we have a company_id
+        if company_id:
+            properties["Company"] = {
+                "relation": [
+                    {
+                        "id": company_id
+                    }
+                ]
+            }
+        
+        # Add optional fields if provided
+        if match:
+            properties["Match"] = {
+                "select": {
+                    "name": match
+                }
+            }
+        
+        if work_arrangement:
+            properties["Work Arrangement"] = {
+                "select": {
+                    "name": work_arrangement
+                }
+            }
+        
+        if demand:
+            properties["Demand"] = {
+                "select": {
+                    "name": demand
+                }
+            }
+        
+        if budget is not None:
+            properties["Budget"] = {
+                "number": budget
+            }
+        
+        # City is multi_select, not rich_text
+        if city:
+            properties["City"] = {
+                "multi_select": [
+                    {
+                        "name": city
+                    }
+                ]
+            }
+        
+        if country:
+            properties["Country"] = {
+                "select": {
+                    "name": country
+                }
+            }
+        
+        logger.info(f"Updating Notion page: {page_id}")
+        
+        try:
+            # Update page properties
+            response = self.client.pages.update(
+                page_id=page_id,
+                properties=properties
+            )
+            
+            # If job description provided, update page content
+            if job_description:
+                # First, get existing blocks to delete them
+                blocks_response = self.client.blocks.children.list(block_id=page_id)
+                existing_blocks = blocks_response.get('results', [])
+                
+                # Delete existing blocks
+                for block in existing_blocks:
+                    try:
+                        self.client.blocks.delete(block_id=block['id'])
+                    except APIResponseError as e:
+                        logger.warning(f"Could not delete block {block['id']}: {e}")
+                
+                # Add new job description in callout block
+                description_chunks = [job_description[i:i+2000] 
+                                    for i in range(0, len(job_description), 2000)]
+                
+                self.client.blocks.children.append(
+                    block_id=page_id,
+                    children=[{
+                        "object": "block",
+                        "type": "callout",
+                        "callout": {
+                            "rich_text": [
+                                {
+                                    "type": "text",
+                                    "text": {
+                                        "content": chunk
+                                    }
+                                }
+                                for chunk in description_chunks
+                            ],
+                            "icon": {
+                                "type": "external",
+                                "external": {
+                                    "url": "https://www.notion.so/icons/description_gray.svg"
+                                }
+                            },
+                            "color": "default"
+                        }
+                    }]
+                )
+            
+            return response
+        except APIResponseError as e:
+            logger.error(f"Error updating Notion page: {e}")
             raise
