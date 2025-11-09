@@ -46,7 +46,7 @@
 **Validation Rules**:
 - `position`: Must not be empty or whitespace-only after trimming
 - `company`: Must not be empty or whitespace-only after trimming
-- `posting_url`: Must match pattern `https://www.linkedin.com/jobs/view/*` or `https://www.linkedin.com/jobs/collections/*`
+- `posting_url`: Must match pattern `https://www.linkedin.com/jobs/view/*`, `https://www.linkedin.com/jobs/collections/*`, or `https://www.linkedin.com/jobs/search/*`
 - `origin`: Must equal "LinkedIn" (case-sensitive)
 - `match`: If provided, must be one of: "low", "medium", "high"
 - `work_arrangement`: If provided, must be one of: "remote", "hybrid", "on-site"

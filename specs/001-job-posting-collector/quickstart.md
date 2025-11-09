@@ -251,7 +251,7 @@ curl http://localhost:5000/health
 1. Open LinkedIn in Chrome: [https://www.linkedin.com/jobs/](https://www.linkedin.com/jobs/)
 2. Search for any job (e.g., "Software Engineer")
 3. Click on a job posting to view the full details
-4. Make sure the URL looks like: `https://www.linkedin.com/jobs/view/1234567890`
+4. Make sure the URL is a LinkedIn job page (e.g., `https://www.linkedin.com/jobs/view/...`, `https://www.linkedin.com/jobs/collections/...`, or `https://www.linkedin.com/jobs/search/...`)
 
 ### Step 2: Save Job
 

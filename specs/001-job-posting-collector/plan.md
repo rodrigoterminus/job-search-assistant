@@ -890,7 +890,8 @@ async function isLinkedInJobPage() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab.url && (
     tab.url.includes('linkedin.com/jobs/view') ||
-    tab.url.includes('linkedin.com/jobs/collections')
+    tab.url.includes('linkedin.com/jobs/collections') ||
+    tab.url.includes('linkedin.com/jobs/search')
   );
 }
 
