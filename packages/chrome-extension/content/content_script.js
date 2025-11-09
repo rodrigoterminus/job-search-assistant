@@ -7,10 +7,22 @@
 function scrapeLinkedInJob() {
   console.log('[Content Script] Starting LinkedIn job scraping...');
   
+  // Extract job posting URL
+  let posting_url = window.location.href;
+  
+  // If on a search page with currentJobId parameter, construct the direct job URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentJobId = urlParams.get('currentJobId');
+  
+  if (currentJobId) {
+    posting_url = `https://www.linkedin.com/jobs/view/${currentJobId}`;
+    console.log('[Content Script] Extracted job ID from search page:', currentJobId);
+  }
+  
   const result = {
     position: null,
     company: null,
-    posting_url: window.location.href,
+    posting_url: posting_url,
     origin: 'LinkedIn',
     job_description: null,
     match: null,
