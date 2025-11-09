@@ -34,6 +34,41 @@ let existingPageId = null;
 let existingPageUrl = null;
 
 /**
+ * Ensure content script is loaded on the current tab
+ * Injects content script if not already loaded (e.g., extension just installed or reloaded)
+ */
+async function ensureContentScriptLoaded() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  
+  try {
+    // Try to ping the content script
+    await chrome.tabs.sendMessage(tab.id, { action: 'ping' });
+    console.log('[Popup] Content script already loaded');
+  } catch (error) {
+    // Content script not loaded, inject it
+    console.log('[Popup] Content script not loaded, injecting...');
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content/content_script.js']
+    });
+    console.log('[Popup] Content script injected successfully');
+  }
+}
+
+/**
+ * Initialize checkbox state from storage
+ * Loads user preference for LinkedIn auto-save (default: true)
+ */
+async function initializeCheckbox() {
+  const { saveToLinkedIn = true } = await chrome.storage.local.get({ saveToLinkedIn: true });
+  const checkbox = document.getElementById('save-to-linkedin');
+  if (checkbox) {
+    checkbox.checked = saveToLinkedIn;
+    console.log('[Popup] Checkbox initialized to:', saveToLinkedIn);
+  }
+}
+
+/**
  * Check if job posting already exists in Notion
  */
 async function checkJobExists(postingUrl) {
@@ -144,23 +179,28 @@ async function isLinkedInJobPage() {
 
 /**
  * Scrape job data from current LinkedIn page
+ * Sends message to content script to extract job data
  */
 async function scrapeJobData() {
   console.log('[Popup] Starting job data extraction...');
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   
-  const results = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['content/content_script.js']
-  });
-  
-  if (results && results[0] && results[0].result) {
-    console.log('[Popup] Extraction successful:', results[0].result);
-    return results[0].result;
+  try {
+    const result = await chrome.tabs.sendMessage(tab.id, {
+      action: 'scrapeJobData'
+    });
+    
+    if (result && result.position) {
+      console.log('[Popup] Extraction successful:', result);
+      return result;
+    }
+    
+    console.error('[Popup] Extraction failed - incomplete data returned');
+    throw new Error('Failed to scrape job data');
+  } catch (error) {
+    console.error('[Popup] Extraction error:', error);
+    throw error;
   }
-  
-  console.error('[Popup] Extraction failed - no results returned');
-  throw new Error('Failed to scrape job data');
 }
 
 /**
@@ -291,10 +331,78 @@ function updateSaveButton() {
   }
 }
 
+/**
+ * Click LinkedIn save button via content script
+ * Sends message to content script with 3-second timeout
+ * @returns {Promise<Object>} Response with success status and reason
+ */
+async function clickLinkedInSaveButton() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  
+  try {
+    // Apply 3-second timeout to LinkedIn click (advisory)
+    const clickPromise = chrome.tabs.sendMessage(tab.id, {
+      action: 'clickLinkedInSave'
+    });
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('timeout')), 3000)
+    );
+    
+    const response = await Promise.race([clickPromise, timeoutPromise]);
+    console.log('[Popup] LinkedIn click response:', response);
+    return response;
+  } catch (error) {
+    console.warn('[Popup] LinkedIn click error:', error);
+    return { 
+      success: false, 
+      reason: error.message === 'timeout' ? 'timeout' : 'error',
+      message: error.message
+    };
+  }
+}
+
+/**
+ * Check LinkedIn login state via content script
+ * Disables checkbox if user is not logged into LinkedIn
+ */
+async function checkLoginState() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  
+  try {
+    const response = await chrome.tabs.sendMessage(tab.id, {
+      action: 'checkLinkedInLoginState'
+    });
+    
+    const checkbox = document.getElementById('save-to-linkedin');
+    const label = checkbox ? checkbox.parentElement : null;
+    
+    if (checkbox && label && !response.loggedIn) {
+      checkbox.disabled = true;
+      label.classList.add('disabled');
+      console.log('[Popup] Checkbox disabled - user not logged in to LinkedIn');
+    }
+  } catch (error) {
+    // Content script not loaded or not on LinkedIn; leave checkbox enabled
+    console.warn('[Popup] Could not check login state:', error);
+  }
+}
+
 // Add input event listeners to validate on change
 fields.position.addEventListener('input', updateSaveButton);
 fields.company.addEventListener('input', updateSaveButton);
 fields.posting_url.addEventListener('input', updateSaveButton);
+
+// Add checkbox change listener to save preference
+document.addEventListener('DOMContentLoaded', () => {
+  const checkbox = document.getElementById('save-to-linkedin');
+  if (checkbox) {
+    checkbox.addEventListener('change', async (e) => {
+      await chrome.storage.local.set({ saveToLinkedIn: e.target.checked });
+      console.log('[Popup] Preference saved: saveToLinkedIn =', e.target.checked);
+    });
+  }
+});
 
 // Add click event listener for "Open on Notion" button
 openBtn.addEventListener('click', openOnNotion);
@@ -381,7 +489,19 @@ formEl.addEventListener('submit', async (e) => {
   
   try {
     const jobData = getFormData();
+    
+    // 1. Save to Notion (always happens - critical operation)
     const result = await saveJobToNotion(jobData);
+    
+    // 2. Click LinkedIn button if enabled (best-effort, non-blocking)
+    const { saveToLinkedIn = true } = await chrome.storage.local.get({ saveToLinkedIn: true });
+    
+    if (saveToLinkedIn) {
+      clickLinkedInSaveButton().catch(err => {
+        console.warn('[Popup] LinkedIn click failed (non-critical):', err);
+        // Gracefully ignore - Notion save succeeded
+      });
+    }
     
     const isUpdate = !!existingPageId;
     const successMessage = isUpdate ? 'Job updated in Notion!' : 'Job saved to Notion!';
@@ -413,6 +533,9 @@ formEl.addEventListener('submit', async (e) => {
 (async () => {
   console.log('[Popup] Initializing...');
   
+  // Initialize checkbox preference
+  await initializeCheckbox();
+  
   try {
     const isJobPage = await isLinkedInJobPage();
     
@@ -423,6 +546,12 @@ formEl.addEventListener('submit', async (e) => {
       console.log('[Popup] Initialization stopped - not on LinkedIn job page');
       return;
     }
+    
+    // Ensure content script is loaded
+    await ensureContentScriptLoaded();
+    
+    // Check login state and disable checkbox if needed
+    await checkLoginState();
     
     setStatus('Extracting job data...', 'loading');
     const scrapedData = await scrapeJobData();

@@ -4,7 +4,7 @@
  * Note: Job description formatting is preserved for Notion rich text field
  */
 
-(function scrapeLinkedInJob() {
+function scrapeLinkedInJob() {
   console.log('[Content Script] Starting LinkedIn job scraping...');
   
   const result = {
@@ -174,4 +174,162 @@
   });
   
   return result;
-})();
+}
+
+/**
+ * Find LinkedIn save button using multiple selector fallbacks
+ * Tries multiple CSS selectors to handle LinkedIn DOM changes
+ * @returns {HTMLElement|null} Save button element or null if not found
+ */
+function findLinkedInSaveButton() {
+  console.log('[Content Script] Searching for LinkedIn save button...');
+  
+  // Fallback selectors in priority order
+  const selectors = [
+    'button[aria-label*="Save"]',      // ARIA label (most reliable)
+    'button.jobs-save-button',         // LinkedIn's job save button class
+    'button[data-control-name*="save"]', // Data attribute matching
+  ];
+  
+  for (const selector of selectors) {
+    const button = document.querySelector(selector);
+    if (button) {
+      console.log('[Content Script] Save button found with selector:', selector);
+      return button;
+    }
+  }
+  
+  console.log('[Content Script] Save button not found');
+  return null;
+}
+
+/**
+ * Check if job is already saved on LinkedIn
+ * @param {HTMLElement} button - The save button element
+ * @returns {boolean} True if job already saved, false otherwise
+ */
+function isJobAlreadySaved(button) {
+  const text = (button.textContent || button.innerText || '').toLowerCase();
+  const alreadySaved = text.includes('saved');
+  console.log('[Content Script] Button text:', text, '| Already saved:', alreadySaved);
+  return alreadySaved;
+}
+
+/**
+ * Check if user is logged in to LinkedIn
+ * Uses multiple DOM indicators to determine login state
+ * @returns {Object} Login state with indicators array
+ */
+function isUserLoggedInToLinkedIn() {
+  console.log('[Content Script] Checking LinkedIn login state...');
+  
+  // Common logged-in UI indicators
+  const loginIndicators = [
+    '.global-nav__me',                              // User profile nav item
+    '.global-nav__me-photo',                        // User avatar image
+    '[data-control-name="identity_profile_photo"]', // Profile photo element
+  ];
+  
+  const detected = loginIndicators.filter(selector => 
+    document.querySelector(selector) !== null
+  );
+  
+  const loggedIn = detected.length > 0;
+  console.log('[Content Script] Login indicators detected:', detected, '| Logged in:', loggedIn);
+  
+  return {
+    loggedIn: loggedIn,
+    indicators: detected
+  };
+}
+
+/**
+ * Handle clickLinkedInSave message from popup
+ * Attempts to find and click LinkedIn's save button
+ * @param {Function} sendResponse - Callback to send response to popup
+ */
+function handleClickLinkedInSave(sendResponse) {
+  try {
+    const button = findLinkedInSaveButton();
+    
+    if (!button) {
+      sendResponse({ 
+        success: false, 
+        reason: 'button-not-found',
+        message: 'LinkedIn save button not found'
+      });
+      return;
+    }
+    
+    if (isJobAlreadySaved(button)) {
+      sendResponse({ 
+        success: true, 
+        reason: 'already-saved',
+        message: 'Job already saved on LinkedIn'
+      });
+      return;
+    }
+    
+    button.click();
+    console.log('[Content Script] LinkedIn save button clicked successfully');
+    sendResponse({ 
+      success: true, 
+      reason: 'clicked',
+      message: 'LinkedIn save button clicked'
+    });
+  } catch (error) {
+    console.error('[Content Script] Error clicking LinkedIn button:', error);
+    sendResponse({ 
+      success: false, 
+      reason: 'error',
+      message: error.message
+    });
+  }
+}
+
+/**
+ * Handle checkLinkedInLoginState message from popup
+ * @param {Function} sendResponse - Callback to send response to popup
+ */
+function handleCheckLoginState(sendResponse) {
+  const loginState = isUserLoggedInToLinkedIn();
+  sendResponse(loginState);
+}
+
+/**
+ * Handle scrapeJobData message from popup
+ * @param {Function} sendResponse - Callback to send response to popup
+ */
+function handleScrapeJobData(sendResponse) {
+  const jobData = scrapeLinkedInJob();
+  sendResponse(jobData);
+}
+
+/**
+ * Message listener for popup communication
+ */
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('[Content Script] Message received:', request.action);
+  
+  switch (request.action) {
+    case 'ping':
+      sendResponse({ status: 'ready' });
+      return true;
+      
+    case 'clickLinkedInSave':
+      handleClickLinkedInSave(sendResponse);
+      return true; // Keep channel open for async response
+      
+    case 'checkLinkedInLoginState':
+      handleCheckLoginState(sendResponse);
+      return true;
+      
+    case 'scrapeJobData':
+      handleScrapeJobData(sendResponse);
+      return true;
+      
+    default:
+      sendResponse({ error: 'Unknown action' });
+      return false;
+  }
+});

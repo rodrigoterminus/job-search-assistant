@@ -5,7 +5,8 @@
   "description": "Save LinkedIn job postings to Notion with one click",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
     "https://www.linkedin.com/*",
@@ -14,5 +15,11 @@
   "action": {
     "default_popup": "popup/popup.html"
   },
-  "content_scripts": []
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["content/content_script.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }

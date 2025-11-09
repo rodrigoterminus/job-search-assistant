@@ -17,11 +17,11 @@ All tasks include file paths for implementation.
 
 ## Phase 0: Setup & Prerequisites
 
-- [ ] [T001] Verify Chrome extension structure and existing files (`packages/chrome-extension/manifest.json`, `popup/popup.js`, `content/content_script.js`)
-- [ ] [T002] Verify manifest.json has required permissions (`storage`, `scripting`, `activeTab`)
-- [ ] [T003] Verify content_scripts registration for `https://www.linkedin.com/*` in manifest.json
-- [ ] [T004] Confirm existing Notion save functionality works (`popup/popup.js` → backend API)
-- [ ] [T005] Set up local testing environment (load extension in Chrome, test on LinkedIn job page)
+- [X] [T001] Verify Chrome extension structure and existing files (`packages/chrome-extension/manifest.json`, `popup/popup.js`, `content/content_script.js`)
+- [X] [T002] Verify manifest.json has required permissions (`storage`, `scripting`, `activeTab`)
+- [X] [T003] Verify content_scripts registration for `https://www.linkedin.com/*` in manifest.json
+- [X] [T004] Confirm existing Notion save functionality works (`popup/popup.js` → backend API)
+- [X] [T005] Set up local testing environment (load extension in Chrome, test on LinkedIn job page)
 
 ---
 
@@ -29,19 +29,19 @@ All tasks include file paths for implementation.
 
 ### Storage Layer
 
-- [ ] [T101] Implement preference initialization function in `popup/popup.js` (`initializeCheckbox()`)
-- [ ] [T102] Implement preference save handler in `popup/popup.js` (checkbox change listener)
-- [ ] [T103] Implement preference retrieval with default value (chrome.storage.local.get with `saveToLinkedIn: true` default)
-- [ ] [T104] Test preference persistence across extension reload (manual test)
+- [X] [T101] Implement preference initialization function in `popup/popup.js` (`initializeCheckbox()`)
+- [X] [T102] Implement preference save handler in `popup/popup.js` (checkbox change listener)
+- [X] [T103] Implement preference retrieval with default value (chrome.storage.local.get with `saveToLinkedIn: true` default)
+- [X] [T104] Test preference persistence across extension reload (manual test)
 
 ### Content Script Message Handlers
 
-- [ ] [T201] [P1] Implement LinkedIn save button detection in `content/content_script.js` (`findLinkedInSaveButton()` with selector fallbacks)
-- [ ] [T202] [P1] Implement already-saved state detection in `content/content_script.js` (`isJobAlreadySaved()` checking button text)
-- [ ] [T203] [P1] Implement `clickLinkedInSave` message handler in `content/content_script.js` (button detection → click → response)
-- [ ] [T204] Implement login state detection in `content/content_script.js` (detect `.global-nav__me` and other indicators)
-- [ ] [T205] Implement `checkLinkedInLoginState` message handler in `content/content_script.js` (check indicators → response)
-- [ ] [T206] Register chrome.runtime.onMessage listener with switch statement for actions (`clickLinkedInSave`, `checkLinkedInLoginState`)
+- [X] [T201] [P1] Implement LinkedIn save button detection in `content/content_script.js` (`findLinkedInSaveButton()` with selector fallbacks)
+- [X] [T202] [P1] Implement already-saved state detection in `content/content_script.js` (`isJobAlreadySaved()` checking button text)
+- [X] [T203] [P1] Implement `clickLinkedInSave` message handler in `content/content_script.js` (button detection → click → response)
+- [X] [T204] Implement login state detection in `content/content_script.js` (detect `.global-nav__me` and other indicators)
+- [X] [T205] Implement `checkLinkedInLoginState` message handler in `content/content_script.js` (check indicators → response)
+- [X] [T206] Register chrome.runtime.onMessage listener with switch statement for actions (`clickLinkedInSave`, `checkLinkedInLoginState`)
 
 ---
 
@@ -49,19 +49,19 @@ All tasks include file paths for implementation.
 
 ### Core Dual-Save Flow
 
-- [ ] [T301] [P1] US1 Update save button handler in `popup/popup.js` to call LinkedIn click after Notion save
-- [ ] [T302] [P1] US1 Implement `clickLinkedInSaveButton()` function in `popup/popup.js` (chrome.tabs.sendMessage with `clickLinkedInSave` action)
-- [ ] [T303] [P1] US1 Add error handling for LinkedIn click failure (try/catch with console.warn, don't block Notion save)
-- [ ] [T304] [P1] US1 Ensure Notion save proceeds regardless of LinkedIn outcome (fire-and-forget pattern)
-- [ ] [T305] [P1] US1 Add save button disable/enable logic to prevent duplicate operations (`saveBtn.disabled = true/false`)
+- [X] [T301] [P1] US1 Update save button handler in `popup/popup.js` to call LinkedIn click after Notion save
+- [X] [T302] [P1] US1 Implement `clickLinkedInSaveButton()` function in `popup/popup.js` (chrome.tabs.sendMessage with `clickLinkedInSave` action)
+- [X] [T303] [P1] US1 Add error handling for LinkedIn click failure (try/catch with console.warn, don't block Notion save)
+- [X] [T304] [P1] US1 Ensure Notion save proceeds regardless of LinkedIn outcome (fire-and-forget pattern)
+- [X] [T305] [P1] US1 Add save button disable/enable logic to prevent duplicate operations (`saveBtn.disabled = true/false`)
 
 ### Testing & Validation
 
-- [ ] [T306] [P1] US1 Test dual-save on unsaved LinkedIn job (verify both Notion entry created AND LinkedIn button shows "Saved")
-- [ ] [T307] [P1] US1 Test dual-save on already-saved LinkedIn job (verify Notion update AND LinkedIn button not clicked again)
-- [ ] [T308] [P1] US1 Test rapid consecutive saves (verify button disables during operation, no duplicate saves)
-- [ ] [T309] [P1] US1 Verify confirmation message "Job saved to Notion!" displays correctly after dual-save
-- [ ] [T310] [P1] US1 Test with 10 consecutive job saves, verify all appear in LinkedIn's "My Jobs" section
+- [X] [T306] [P1] US1 Test dual-save on unsaved LinkedIn job (verify both Notion entry created AND LinkedIn button shows "Saved")
+- [X] [T307] [P1] US1 Test dual-save on already-saved LinkedIn job (verify Notion update AND LinkedIn button not clicked again)
+- [X] [T308] [P1] US1 Test rapid consecutive saves (verify button disables during operation, no duplicate saves)
+- [X] [T309] [P1] US1 Verify confirmation message "Job saved to Notion!" displays correctly after dual-save
+- [X] [T310] [P1] US1 Test with 10 consecutive job saves, verify all appear in LinkedIn's "My Jobs" section
 
 ---
 
@@ -69,23 +69,23 @@ All tasks include file paths for implementation.
 
 ### UI Implementation
 
-- [ ] [T401] [P2] US2 Add checkbox HTML to `popup/popup.html` (before save button, id="save-to-linkedin", checked by default)
-- [ ] [T402] [P2] US2 Add checkbox label "Also save on LinkedIn" in `popup/popup.html`
-- [ ] [T403] [P2] US2 Style checkbox in `popup/popup.css` (`.checkbox-label` with flex layout, gap, cursor)
-- [ ] [T404] [P2] US2 Add disabled state styling in `popup/popup.css` (`.checkbox-label.disabled` with reduced opacity)
+- [X] [T401] [P2] US2 Add checkbox HTML to `popup/popup.html` (before save button, id="save-to-linkedin", checked by default)
+- [X] [T402] [P2] US2 Add checkbox label "Also save on LinkedIn" in `popup/popup.html`
+- [X] [T403] [P2] US2 Style checkbox in `popup/popup.css` (`.checkbox-label` with flex layout, gap, cursor)
+- [X] [T404] [P2] US2 Add disabled state styling in `popup/popup.css` (`.checkbox-label.disabled` with reduced opacity)
 
 ### Checkbox Logic
 
-- [ ] [T405] [P2] US2 Connect checkbox state to save flow in `popup/popup.js` (read `saveToLinkedIn` preference before LinkedIn click)
-- [ ] [T406] [P2] US2 Add conditional logic: if unchecked, skip LinkedIn click entirely
-- [ ] [T407] [P2] US2 Verify checkbox state persists across browser sessions (manual test: check → close browser → reopen → still checked)
+- [X] [T405] [P2] US2 Connect checkbox state to save flow in `popup/popup.js` (read `saveToLinkedIn` preference before LinkedIn click)
+- [X] [T406] [P2] US2 Add conditional logic: if unchecked, skip LinkedIn click entirely
+- [X] [T407] [P2] US2 Verify checkbox state persists across browser sessions (manual test: check → close browser → reopen → still checked)
 
 ### Testing & Validation
 
-- [ ] [T408] [P2] US2 Test Notion-only save (checkbox unchecked → save → Notion entry created, LinkedIn button NOT clicked)
-- [ ] [T409] [P2] US2 Test dual-save (checkbox checked → save → both platforms saved)
-- [ ] [T410] [P2] US2 Test checkbox persistence (toggle → close extension → reopen on different job → state remembered)
-- [ ] [T411] [P2] US2 Verify default checkbox state is checked on first install
+- [X] [T408] [P2] US2 Test Notion-only save (checkbox unchecked → save → Notion entry created, LinkedIn button NOT clicked)
+- [X] [T409] [P2] US2 Test dual-save (checkbox checked → save → both platforms saved)
+- [X] [T410] [P2] US2 Test checkbox persistence (toggle → close extension → reopen on different job → state remembered)
+- [X] [T411] [P2] US2 Verify default checkbox state is checked on first install
 
 ---
 
@@ -93,25 +93,25 @@ All tasks include file paths for implementation.
 
 ### Login State Detection
 
-- [ ] [T501] [P3] US3 Implement `checkLoginState()` function in `popup/popup.js` (send `checkLinkedInLoginState` message)
-- [ ] [T502] [P3] US3 Add checkbox disable logic when logged out (set `checkbox.disabled = true`, add `.disabled` class)
-- [ ] [T503] [P3] US3 Call `checkLoginState()` on popup load (in DOMContentLoaded listener)
-- [ ] [T504] [P3] US3 Add error handling for login check failure (if content script not loaded, leave checkbox enabled)
+- [X] [T501] [P3] US3 Implement `checkLoginState()` function in `popup/popup.js` (send `checkLinkedInLoginState` message)
+- [X] [T502] [P3] US3 Add checkbox disable logic when logged out (set `checkbox.disabled = true`, add `.disabled` class)
+- [X] [T503] [P3] US3 Call `checkLoginState()` on popup load (in DOMContentLoaded listener)
+- [X] [T504] [P3] US3 Add error handling for login check failure (if content script not loaded, leave checkbox enabled)
 
 ### Error Handling & Edge Cases
 
-- [ ] [T505] [P3] US3 Add timeout handling for LinkedIn click (3-second advisory timeout using Promise.race)
-- [ ] [T506] [P3] US3 Ensure Notion save always succeeds even if LinkedIn times out
-- [ ] [T507] [P3] US3 Test LinkedIn button not found scenario (delete button from DOM → save → Notion succeeds, no error shown)
-- [ ] [T508] [P3] US3 Test logged-out scenario (log out of LinkedIn → open extension → checkbox disabled)
-- [ ] [T509] [P3] US3 Test LinkedIn page structure change (modify button selector → save → Notion succeeds, LinkedIn fails silently)
-- [ ] [T510] [P3] US3 Test manual fallback (LinkedIn click fails → user can manually click LinkedIn button afterward)
+- [X] [T505] [P3] US3 Add timeout handling for LinkedIn click (3-second advisory timeout using Promise.race)
+- [X] [T506] [P3] US3 Ensure Notion save always succeeds even if LinkedIn times out
+- [X] [T507] [P3] US3 Test LinkedIn button not found scenario (delete button from DOM → save → Notion succeeds, no error shown)
+- [X] [T508] [P3] US3 Test logged-out scenario (log out of LinkedIn → open extension → checkbox disabled)
+- [X] [T509] [P3] US3 Test LinkedIn page structure change (modify button selector → save → Notion succeeds, LinkedIn fails silently)
+- [X] [T510] [P3] US3 Test manual fallback (LinkedIn click fails → user can manually click LinkedIn button afterward)
 
 ### Additional Edge Cases
 
-- [ ] [T511] [P3] US3 Test LinkedIn save button obscured by modal (create overlay → save → Notion succeeds)
-- [ ] [T512] [P3] US3 Test LinkedIn page navigation during save (start save → navigate away → Notion completes)
-- [ ] [T513] [P3] US3 Test LinkedIn job restriction (expired job → save → Notion succeeds, LinkedIn fails silently)
+- [X] [T511] [P3] US3 Test LinkedIn save button obscured by modal (create overlay → save → Notion succeeds)
+- [X] [T512] [P3] US3 Test LinkedIn page navigation during save (start save → navigate away → Notion completes)
+- [x] [T513] [P3] US3 Test LinkedIn job restriction (expired job → save → Notion succeeds, LinkedIn fails silently)
 
 ---
 
@@ -119,33 +119,33 @@ All tasks include file paths for implementation.
 
 ### Code Quality
 
-- [ ] [T601] Add console.log debugging statements to content script for button detection
-- [ ] [T602] Add console.log debugging statements to popup script for preference loading
-- [ ] [T603] Add JSDoc comments to all new functions (`initializeCheckbox`, `clickLinkedInSaveButton`, `findLinkedInSaveButton`, etc.)
-- [ ] [T604] Add inline comments explaining LinkedIn selector fallback strategy
-- [ ] [T605] Add inline comments explaining login state detection indicators
+- [X] [T601] Add console.log debugging statements to content script for button detection
+- [X] [T602] Add console.log debugging statements to popup script for preference loading
+- [X] [T603] Add JSDoc comments to all new functions (`initializeCheckbox`, `clickLinkedInSaveButton`, `findLinkedInSaveButton`, etc.)
+- [X] [T604] Add inline comments explaining LinkedIn selector fallback strategy
+- [X] [T605] Add inline comments explaining login state detection indicators
 
 ### Error Messages & Logging
 
-- [ ] [T606] Add console.warn for LinkedIn click failures (with reason)
-- [ ] [T607] Add console.log for successful LinkedIn clicks (with timestamp)
-- [ ] [T608] Add console.error for unexpected errors (with stack trace)
+- [X] [T606] Add console.warn for LinkedIn click failures (with reason)
+- [X] [T607] Add console.log for successful LinkedIn clicks (with timestamp)
+- [X] [T608] Add console.error for unexpected errors (with stack trace)
 
 ### Performance
 
-- [ ] [T609] Verify dual-save completes within 3 seconds for typical jobs (manual testing with timer)
-- [ ] [T610] Verify UI remains responsive during save operation (button disables, no freezing)
-- [ ] [T611] Test with slow network (throttle network in DevTools → save → Notion prioritized)
+- [X] [T609] Verify dual-save completes within 3 seconds for typical jobs (manual testing with timer)
+- [X] [T610] Verify UI remains responsive during save operation (button disables, no freezing)
+- [X] [T611] Test with slow network (throttle network in DevTools → save → Notion prioritized)
 
 ### Final Validation
 
-- [ ] [T612] Run through all acceptance scenarios from spec.md User Story 1 (5 scenarios)
-- [ ] [T613] Run through all acceptance scenarios from spec.md User Story 2 (5 scenarios)
-- [ ] [T614] Run through all acceptance scenarios from spec.md User Story 3 (5 scenarios)
-- [ ] [T615] Verify all 7 edge cases from spec.md are handled correctly
-- [ ] [T616] Verify all 8 success criteria from spec.md are met
-- [ ] [T617] Test on multiple LinkedIn job pages (different companies, job types, locations)
-- [ ] [T618] Verify extension still works on non-LinkedIn pages (graceful degradation)
+- [X] [T612] Run through all acceptance scenarios from spec.md User Story 1 (5 scenarios)
+- [X] [T613] Run through all acceptance scenarios from spec.md User Story 2 (5 scenarios)
+- [X] [T614] Run through all acceptance scenarios from spec.md User Story 3 (5 scenarios)
+- [X] [T615] Verify all 7 edge cases from spec.md are handled correctly
+- [X] [T616] Verify all 8 success criteria from spec.md are met
+- [X] [T617] Test on multiple LinkedIn job pages (different companies, job types, locations)
+- [X] [T618] Verify extension still works on non-LinkedIn pages (graceful degradation)
 
 ---
 
