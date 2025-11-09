@@ -9,13 +9,14 @@ Auto-generated from all feature plans. Last updated: 2025-11-05
 ## Project Structure
 
 ```text
-backend/
-chrome-extension/
+packages/
+  backend/
+  chrome-extension/
 ```
 
 ## Commands
 
-cd backend
+cd packages/backend
 python -m flask run
 
 ## Code Style

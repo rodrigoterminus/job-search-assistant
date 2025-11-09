@@ -9,7 +9,7 @@ Chrome extension for saving LinkedIn job postings to Notion with one click.
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable **Developer mode** (toggle in top-right corner)
 3. Click **Load unpacked**
-4. Navigate to and select the `chrome-extension/` folder
+4. Navigate to and select the `packages/chrome-extension/` folder
 5. The extension should appear in your extensions list
 
 ### 2. Pin Extension to Toolbar (Optional)
@@ -50,7 +50,7 @@ Chrome extension for saving LinkedIn job postings to Notion with one click.
 - URL must contain `/jobs/view/` or `/jobs/collections/`
 
 **"Backend server not running" error**
-- Start the Flask backend server (see backend/README.md)
+- Start the Flask backend server (see packages/backend/README.md)
 - Verify it's running on http://localhost:5000
 
 **"Auto-extraction failed" warning**
@@ -74,7 +74,7 @@ Chrome extension for saving LinkedIn job postings to Notion with one click.
 ### File Structure
 
 ```
-chrome-extension/
+packages/chrome-extension/
 ├── manifest.json             # Extension configuration (Manifest V3)
 ├── popup/
 │   ├── popup.html           # Extension popup UI
@@ -107,7 +107,7 @@ chrome-extension/
 
 ### Making Changes
 
-1. Edit files in `chrome-extension/`
+1. Edit files in `packages/chrome-extension/`
 2. Save changes
 3. Go to `chrome://extensions/`
 4. Click the **reload** icon for Job Posting Collector

@@ -108,7 +108,7 @@ git checkout 001-job-posting-collector
 
 ```bash
 # Navigate to backend directory
-cd backend
+cd packages/backend
 
 # Create virtual environment
 python3 -m venv venv
@@ -173,7 +173,7 @@ FLASK_PORT=5000
 ### Step 5: Start Backend Server
 
 ```bash
-# Make sure you're in backend/ directory with venv activated
+# Make sure you're in packages/backend/ directory with venv activated
 python src/app.py
 ```
 
@@ -218,7 +218,7 @@ curl http://localhost:5000/health
 2. Navigate to: `chrome://extensions/`
 3. Enable **Developer mode** (toggle in top-right corner)
 4. Click **Load unpacked**
-5. Navigate to and select the `chrome-extension/` folder in your project
+5. Navigate to and select the `packages/chrome-extension/` folder in your project
 6. The extension should appear in your extensions list
 
 **Note**: The extension ID will be auto-generated (e.g., `abcdefghijklmnopqrstuvwxyz123456`). This is expected for unpacked extensions.
@@ -356,7 +356,7 @@ curl http://localhost:5000/health
 
 ### Making Changes to Backend
 
-1. Edit Python files in `backend/src/`
+1. Edit Python files in `packages/backend/src/`
 2. Save changes
 3. Restart Flask server (Ctrl+C, then `python src/app.py`)
 4. Test changes
@@ -365,7 +365,7 @@ curl http://localhost:5000/health
 
 ### Making Changes to Extension
 
-1. Edit files in `chrome-extension/`
+1. Edit files in `packages/chrome-extension/`
 2. Save changes
 3. Go to `chrome://extensions/`
 4. Click the **reload** icon for Job Posting Collector extension
@@ -423,14 +423,14 @@ curl http://localhost:5000/health
 ### Debug Mode
 
 **Enable verbose backend logging**:
-Edit `backend/src/app.py`:
+Edit `packages/backend/src/app.py`:
 ```python
 import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
 
 **Enable verbose extension logging**:
-Edit `chrome-extension/popup/popup.js`:
+Edit `packages/chrome-extension/popup/popup.js`:
 ```javascript
 const DEBUG = true;  // Set to true for verbose console logs
 ```
@@ -442,7 +442,7 @@ const DEBUG = true;  // Set to true for verbose console logs
 ### Updating Dependencies
 
 ```bash
-cd backend
+cd packages/backend
 source venv/bin/activate
 pip list --outdated
 pip install --upgrade <package-name>

@@ -10,7 +10,7 @@
         ".specify/scripts/bash/": true,
         ".specify/scripts/powershell/": true
     },
-    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+    "python.defaultInterpreterPath": "${workspaceFolder}/packages/backend/.venv/bin/python",
     "python.terminal.activateEnvironment": true,
     "files.exclude": {
         "**/__pycache__": true,

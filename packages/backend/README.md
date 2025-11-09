@@ -13,7 +13,7 @@ Flask backend for the Job Posting Collector Chrome Extension. Handles job postin
 ### 1. Create Virtual Environment
 
 ```bash
-cd backend
+cd packages/backend
 python3 -m venv .venv
 
 # Activate virtual environment
@@ -60,7 +60,7 @@ See the [quickstart guide](../specs/001-job-posting-collector/quickstart.md) for
 ### Quick Start (Recommended)
 
 ```bash
-cd backend
+cd packages/backend
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 python wsgi.py
 ```
@@ -156,7 +156,7 @@ Check backend and Notion database connectivity.
 
 **Port 3000 already in use**
 - Change FLASK_PORT in .env to a different port
-- Update the BACKEND_URL in chrome-extension/popup/popup.js
+- Update the BACKEND_URL in packages/chrome-extension/popup/popup.js
 
 ## Development
 
@@ -186,7 +186,7 @@ curl -X POST http://localhost:5000/api/job-postings \
 ## Project Structure
 
 ```
-backend/
+packages/backend/
 ├── src/                       # Main application package
 │   ├── __init__.py
 │   ├── app.py                # Flask application factory

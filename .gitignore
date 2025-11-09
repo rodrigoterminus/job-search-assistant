@@ -36,7 +36,7 @@ venv.bak/
 .env.*.local
 
 # IDEs
-.vscode/
+# .vscode/ - Keeping tracked for project-specific debug configs
 .idea/
 *.swp
 *.swo

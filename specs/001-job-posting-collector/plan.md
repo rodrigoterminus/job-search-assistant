@@ -82,36 +82,37 @@ specs/001-job-posting-collector/
 
 ```text
 job-search-assistant/
-├── backend/
-│   ├── src/
-│   │   ├── api/
-│   │   │   ├── __init__.py
-│   │   │   ├── routes.py          # API endpoint definitions
-│   │   │   └── validators.py      # Request validation logic
-│   │   ├── services/
-│   │   │   ├── __init__.py
-│   │   │   └── notion_service.py  # Notion API integration
-│   │   ├── config/
-│   │   │   ├── __init__.py
-│   │   │   └── settings.py        # Configuration management
-│   │   └── app.py                 # Flask application entry point
-│   ├── requirements.txt           # Python dependencies
-│   ├── .env.example              # Environment variable template
-│   └── README.md                 # Backend setup instructions
-│
-├── chrome-extension/
-│   ├── manifest.json             # Extension configuration (Manifest V3)
-│   ├── popup/
-│   │   ├── popup.html           # Extension popup UI
-│   │   ├── popup.js             # Popup logic and API communication
-│   │   └── popup.css            # Popup styling
-│   ├── content/
-│   │   └── content_script.js    # LinkedIn DOM scraping logic
-│   ├── icons/
-│   │   ├── icon16.png
-│   │   ├── icon48.png
-│   │   └── icon128.png
-│   └── README.md                # Extension installation instructions
+├── packages/
+│   ├── backend/
+│   │   ├── src/
+│   │   │   ├── api/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── routes.py          # API endpoint definitions
+│   │   │   │   └── validators.py      # Request validation logic
+│   │   │   ├── services/
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── notion_service.py  # Notion API integration
+│   │   │   ├── config/
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── settings.py        # Configuration management
+│   │   │   └── app.py                 # Flask application entry point
+│   │   ├── requirements.txt           # Python dependencies
+│   │   ├── .env.example              # Environment variable template
+│   │   └── README.md                 # Backend setup instructions
+│   │
+│   └── chrome-extension/
+│       ├── manifest.json             # Extension configuration (Manifest V3)
+│       ├── popup/
+│       │   ├── popup.html           # Extension popup UI
+│       │   ├── popup.js             # Popup logic and API communication
+│       │   └── popup.css            # Popup styling
+│       ├── content/
+│       │   └── content_script.js    # LinkedIn DOM scraping logic
+│       ├── icons/
+│       │   ├── icon16.png
+│       │   ├── icon48.png
+│       │   └── icon128.png
+│       └── README.md                # Extension installation instructions
 │
 └── .gitignore                   # Excludes .env, __pycache__, etc.
 ```
